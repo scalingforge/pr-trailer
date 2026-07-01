@@ -1,0 +1,13 @@
+name: 'pr-trailer'
+description: 'Analyzes a pull request and posts a risk-prioritized review brief as a comment.'
+inputs:
+  anthropic-api-key:
+    description: 'Anthropic API key used to generate the review brief.'
+    required: true
+  github-token:
+    description: 'Token used to read PR data and post the comment.'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'node24'
+  main: 'dist/index.js'
