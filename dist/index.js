@@ -31748,7 +31748,7 @@ async function run() {
         core.info('No pull_request in event payload; skipping comment.');
         return;
     }
-    const response = await fetch(`${apiUrl}/brief`, {
+    const response = await fetch(`${apiUrl.replace(/\/$/, '')}/brief`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

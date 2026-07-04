@@ -19,7 +19,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  const response = await fetch(`${apiUrl}/brief`, {
+  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/brief`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
