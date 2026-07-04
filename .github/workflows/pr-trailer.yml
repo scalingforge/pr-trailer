@@ -18,5 +18,6 @@ jobs:
       - name: Run pr-trailer
         uses: ./
         with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          api-key: ${{ secrets.PR_TRAILER_API_KEY }}
+          api-url: ${{ vars.PR_TRAILER_API_URL }}
           github-token: ${{ github.token }}
