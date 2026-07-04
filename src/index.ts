@@ -1,12 +1,16 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-const TEST_COMMENT_BODY = '🤖 pr-trailer scaffold is alive';
+interface BriefResponse {
+  message: string;
+}
+
+// Same service for every client — not user-configurable. Update this once
+// pr-trailer-api has a real deployed URL (Task 7 of the wiring plan).
+const PR_TRAILER_API_URL = 'https://TODO-replace-with-deployed-pr-trailer-api-url';
 
 async function run(): Promise<void> {
-  // anthropic-api-key is declared as a required input but unused until a
-  // later spec introduces real Claude API calls.
-  core.getInput('anthropic-api-key', { required: true });
+  const apiKey = core.getInput('api-key', { required: true });
   const githubToken = core.getInput('github-token', { required: true });
 
   const octokit = github.getOctokit(githubToken);
@@ -18,14 +22,32 @@ async function run(): Promise<void> {
     return;
   }
 
+  const response = await fetch(`${PR_TRAILER_API_URL}/brief`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+    },
+    body: JSON.stringify({ ping: true }),
+  });
+
+  if (response.status === 401) {
+    throw new Error('pr-trailer-api rejected the request: invalid api-key.');
+  }
+  if (!response.ok) {
+    throw new Error(`pr-trailer-api request failed with status ${response.status}.`);
+  }
+
+  const { message } = (await response.json()) as BriefResponse;
+
   await octokit.rest.issues.createComment({
     owner: context.repo.owner,
     repo: context.repo.repo,
     issue_number: pullRequest.number,
-    body: TEST_COMMENT_BODY,
+    body: message,
   });
 
-  core.info(`Posted test comment on PR #${pullRequest.number}`);
+  core.info(`Posted comment on PR #${pullRequest.number}`);
 }
 
 run().catch((err: unknown) => {
