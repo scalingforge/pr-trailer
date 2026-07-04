@@ -19,5 +19,4 @@ jobs:
         uses: ./
         with:
           api-key: ${{ secrets.PR_TRAILER_API_KEY }}
-          api-url: ${{ vars.PR_TRAILER_API_URL }}
           github-token: ${{ github.token }}

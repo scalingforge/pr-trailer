@@ -5,9 +5,12 @@ interface BriefResponse {
   message: string;
 }
 
+// Same service for every client — not user-configurable. Update this once
+// pr-trailer-api has a real deployed URL (Task 7 of the wiring plan).
+const PR_TRAILER_API_URL = 'https://TODO-replace-with-deployed-pr-trailer-api-url';
+
 async function run(): Promise<void> {
   const apiKey = core.getInput('api-key', { required: true });
-  const apiUrl = core.getInput('api-url', { required: true });
   const githubToken = core.getInput('github-token', { required: true });
 
   const octokit = github.getOctokit(githubToken);
@@ -19,7 +22,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/brief`, {
+  const response = await fetch(`${PR_TRAILER_API_URL}/brief`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
