@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { upsertPrComment } from './github/upsert-comment';
 
 interface BriefResponse {
   message: string;
@@ -40,12 +41,11 @@ async function run(): Promise<void> {
 
   const { message } = (await response.json()) as BriefResponse;
 
-  await octokit.rest.issues.createComment({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    issue_number: pullRequest.number,
-    body: message,
-  });
+  await upsertPrComment(
+    octokit,
+    { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number },
+    message,
+  );
 
   core.info(`Posted comment on PR #${pullRequest.number}`);
 }
