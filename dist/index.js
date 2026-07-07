@@ -31696,6 +31696,49 @@ module.exports = {
 
 /***/ }),
 
+/***/ 4708:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PR_TRAILER_MARKER = void 0;
+exports.upsertPrComment = upsertPrComment;
+exports.PR_TRAILER_MARKER = '<!-- pr-trailer:v1 -->';
+const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer-ghaction)*';
+function composeBody(body) {
+    return `${exports.PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FOOTER}`;
+}
+async function upsertPrComment(octokit, params, body) {
+    const { owner, repo, pullNumber } = params;
+    const composedBody = composeBody(body);
+    const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+        owner,
+        repo,
+        issue_number: pullNumber,
+        per_page: 100,
+    });
+    const existing = comments.find((comment) => comment.body?.includes(exports.PR_TRAILER_MARKER));
+    if (existing) {
+        await octokit.rest.issues.updateComment({
+            owner,
+            repo,
+            comment_id: existing.id,
+            body: composedBody,
+        });
+        return;
+    }
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: pullNumber,
+        body: composedBody,
+    });
+}
+
+
+/***/ }),
+
 /***/ 9407:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -31737,6 +31780,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
+const upsert_comment_1 = __nccwpck_require__(4708);
 // Same service for every client — not user-configurable. Update this once
 // pr-trailer-api has a real deployed URL (Task 7 of the wiring plan).
 const PR_TRAILER_API_URL = 'https://TODO-replace-with-deployed-pr-trailer-api-url';
@@ -31765,12 +31809,7 @@ async function run() {
         throw new Error(`pr-trailer-api request failed with status ${response.status}.`);
     }
     const { message } = (await response.json());
-    await octokit.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: pullRequest.number,
-        body: message,
-    });
+    await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, message);
     core.info(`Posted comment on PR #${pullRequest.number}`);
 }
 run().catch((err) => {
