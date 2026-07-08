@@ -1,18 +1,22 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { extractPrContext } from './github/extract-context';
 import { upsertPrComment } from './github/upsert-comment';
+import { JobSubmissionError, pollJob, submitJob } from './api/jobs-client';
+import { composeCommentBody } from './render/render-brief';
 
-interface BriefResponse {
-  message: string;
+function parseExcludeFiles(raw: string): string[] {
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
-
-// Same service for every client — not user-configurable. Update this once
-// pr-trailer-api has a real deployed URL (Task 7 of the wiring plan).
-const PR_TRAILER_API_URL = 'https://TODO-replace-with-deployed-pr-trailer-api-url';
 
 async function run(): Promise<void> {
   const apiKey = core.getInput('api-key', { required: true });
+  const apiUrl = core.getInput('api-url', { required: true });
   const githubToken = core.getInput('github-token', { required: true });
+  const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
 
   const octokit = github.getOctokit(githubToken);
   const { context } = github;
@@ -23,28 +27,51 @@ async function run(): Promise<void> {
     return;
   }
 
-  const response = await fetch(`${PR_TRAILER_API_URL}/brief`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
+  const prContext = await extractPrContext(
+    octokit,
+    {
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      pullNumber: pullRequest.number,
+      title: pullRequest.title as string,
+      body: (pullRequest.body as string | null) ?? null,
     },
-    body: JSON.stringify({ ping: true }),
-  });
+    excludeFiles,
+  );
 
-  if (response.status === 401) {
-    throw new Error('pr-trailer-api rejected the request: invalid api-key.');
-  }
-  if (!response.ok) {
-    throw new Error(`pr-trailer-api request failed with status ${response.status}.`);
+  let jobId: string;
+  try {
+    jobId = await submitJob(
+      apiUrl,
+      apiKey,
+      { title: prContext.title, body: prContext.body, commitMessages: prContext.commitMessages },
+      prContext.files,
+    );
+  } catch (err) {
+    if (err instanceof JobSubmissionError) {
+      core.setFailed(err.message);
+      return;
+    }
+    throw err;
   }
 
-  const { message } = (await response.json()) as BriefResponse;
+  const result = await pollJob(apiUrl, apiKey, jobId);
+
+  if (result.outcome === 'error') {
+    core.warning('pr-trailer-api reported a job error; skipping comment.');
+    return;
+  }
+  if (result.outcome === 'timeout') {
+    core.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
+    return;
+  }
+
+  const commentBody = composeCommentBody(result.job.brief, result.job.audio);
 
   await upsertPrComment(
     octokit,
     { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number },
-    message,
+    commentBody,
   );
 
   core.info(`Posted comment on PR #${pullRequest.number}`);

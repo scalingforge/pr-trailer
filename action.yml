@@ -4,6 +4,9 @@ inputs:
   api-key:
     description: 'pr-trailer-api key used to authenticate requests to the analysis service.'
     required: true
+  api-url:
+    description: 'Base URL of the deployed pr-trailer-api service.'
+    required: true
   github-token:
     description: 'Token used to read PR data and post the comment.'
     required: false
