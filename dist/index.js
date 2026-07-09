@@ -31696,6 +31696,121 @@ module.exports = {
 
 /***/ }),
 
+/***/ 7728:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JobSubmissionError = void 0;
+exports.submitJob = submitJob;
+exports.pollJob = pollJob;
+class JobSubmissionError extends Error {
+    kind;
+    constructor(kind, message) {
+        super(message);
+        this.kind = kind;
+        this.name = 'JobSubmissionError';
+    }
+}
+exports.JobSubmissionError = JobSubmissionError;
+async function submitJob(apiUrl, apiKey, pr, files, fetchFn = fetch) {
+    const response = await fetchFn(`${apiUrl}/v1/jobs`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': apiKey,
+        },
+        body: JSON.stringify({ pr, files }),
+    });
+    if (response.status === 401) {
+        throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
+    }
+    if (!response.ok) {
+        throw new JobSubmissionError('rejected', `pr-trailer-api job submission failed with status ${response.status}.`);
+    }
+    const body = (await response.json());
+    return body.jobId;
+}
+const POLL_CEILING_MS = 6 * 60 * 1000;
+const POLL_START_DELAY_MS = 2000;
+const POLL_MAX_DELAY_MS = 10000;
+const POLL_BACKOFF_FACTOR = 1.5;
+async function pollJob(apiUrl, apiKey, jobId, deps = {}) {
+    const fetchFn = deps.fetchFn ?? fetch;
+    const sleepFn = deps.sleepFn ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    const now = deps.now ?? Date.now;
+    const startedAt = now();
+    let delayMs = POLL_START_DELAY_MS;
+    for (;;) {
+        const response = await fetchFn(`${apiUrl}/v1/jobs/${jobId}`, {
+            headers: { 'X-Api-Key': apiKey },
+        });
+        const job = (await response.json());
+        if (job.status === 'done') {
+            if (!job.brief) {
+                throw new Error(`Job ${jobId} reported status "done" without a brief.`);
+            }
+            return { outcome: 'done', job: job };
+        }
+        if (job.status === 'error') {
+            return { outcome: 'error' };
+        }
+        if (now() - startedAt >= POLL_CEILING_MS) {
+            return { outcome: 'timeout' };
+        }
+        await sleepFn(delayMs);
+        delayMs = Math.min(delayMs * POLL_BACKOFF_FACTOR, POLL_MAX_DELAY_MS);
+    }
+}
+
+
+/***/ }),
+
+/***/ 4320:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extractPrContext = extractPrContext;
+const node_path_1 = __nccwpck_require__(6760);
+async function extractPrContext(octokit, params, excludeFiles) {
+    const { owner, repo, pullNumber, title, body } = params;
+    const excludeSet = new Set(excludeFiles);
+    const rawFiles = await octokit.paginate(octokit.rest.pulls.listFiles, {
+        owner,
+        repo,
+        pull_number: pullNumber,
+        per_page: 100,
+    });
+    const files = rawFiles
+        .filter((file) => !excludeSet.has((0, node_path_1.basename)(file.filename)))
+        .map((file) => ({
+        path: file.filename,
+        patch: file.patch ?? '',
+        additions: file.additions,
+        deletions: file.deletions,
+        status: file.status,
+    }));
+    const rawCommits = await octokit.paginate(octokit.rest.pulls.listCommits, {
+        owner,
+        repo,
+        pull_number: pullNumber,
+        per_page: 100,
+    });
+    const commitMessages = rawCommits.map((commit) => commit.commit.message);
+    return {
+        title,
+        body: body ?? '',
+        commitMessages,
+        files,
+    };
+}
+
+
+/***/ }),
+
 /***/ 4708:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -31780,13 +31895,21 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
+const extract_context_1 = __nccwpck_require__(4320);
 const upsert_comment_1 = __nccwpck_require__(4708);
-// Same service for every client — not user-configurable. Update this once
-// pr-trailer-api has a real deployed URL (Task 7 of the wiring plan).
-const PR_TRAILER_API_URL = 'https://TODO-replace-with-deployed-pr-trailer-api-url';
+const jobs_client_1 = __nccwpck_require__(7728);
+const render_brief_1 = __nccwpck_require__(4911);
+function parseExcludeFiles(raw) {
+    return raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+}
 async function run() {
     const apiKey = core.getInput('api-key', { required: true });
+    const apiUrl = core.getInput('api-url', { required: true });
     const githubToken = core.getInput('github-token', { required: true });
+    const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
     const octokit = github.getOctokit(githubToken);
     const { context } = github;
     const pullRequest = context.payload.pull_request;
@@ -31794,28 +31917,101 @@ async function run() {
         core.info('No pull_request in event payload; skipping comment.');
         return;
     }
-    const response = await fetch(`${PR_TRAILER_API_URL}/brief`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': apiKey,
-        },
-        body: JSON.stringify({ ping: true }),
-    });
-    if (response.status === 401) {
-        throw new Error('pr-trailer-api rejected the request: invalid api-key.');
+    const prContext = await (0, extract_context_1.extractPrContext)(octokit, {
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pullNumber: pullRequest.number,
+        title: pullRequest.title,
+        body: pullRequest.body ?? null,
+    }, excludeFiles);
+    let jobId;
+    try {
+        jobId = await (0, jobs_client_1.submitJob)(apiUrl, apiKey, { title: prContext.title, body: prContext.body, commitMessages: prContext.commitMessages }, prContext.files);
     }
-    if (!response.ok) {
-        throw new Error(`pr-trailer-api request failed with status ${response.status}.`);
+    catch (err) {
+        if (err instanceof jobs_client_1.JobSubmissionError) {
+            core.setFailed(err.message);
+            return;
+        }
+        throw err;
     }
-    const { message } = (await response.json());
-    await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, message);
+    const result = await (0, jobs_client_1.pollJob)(apiUrl, apiKey, jobId);
+    if (result.outcome === 'error') {
+        core.warning('pr-trailer-api reported a job error; skipping comment.');
+        return;
+    }
+    if (result.outcome === 'timeout') {
+        core.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
+        return;
+    }
+    const commentBody = (0, render_brief_1.composeCommentBody)(result.job.brief, result.job.audio);
+    await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, commentBody);
     core.info(`Posted comment on PR #${pullRequest.number}`);
 }
 run().catch((err) => {
     const message = err instanceof Error ? err.message : String(err);
     core.setFailed(message);
 });
+
+
+/***/ }),
+
+/***/ 4911:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.renderBrief = renderBrief;
+exports.composeCommentBody = composeCommentBody;
+const RISK_EMOJI = {
+    low: '🟢',
+    medium: '🟡',
+    high: '🔴',
+};
+function renderBrief(brief) {
+    const lines = [];
+    lines.push('## 🚦 Review Brief');
+    lines.push('');
+    lines.push(brief.summary);
+    lines.push('');
+    lines.push(`**Intent:** ${brief.intent}`);
+    lines.push(`**Overall risk:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`);
+    if (brief.files.length > 0) {
+        lines.push('');
+        lines.push('| File | Risk | Why |');
+        lines.push('|---|---|---|');
+        for (const file of brief.files) {
+            lines.push(`| \`${file.path}\` | ${RISK_EMOJI[file.risk]} ${capitalize(file.risk)} | ${file.reason} |`);
+        }
+    }
+    if (brief.readOrder.length > 0) {
+        lines.push('');
+        lines.push('### Suggested reading order');
+        brief.readOrder.forEach((path, i) => {
+            lines.push(`${i + 1}. \`${path}\``);
+        });
+    }
+    if (brief.openQuestions.length > 0) {
+        lines.push('');
+        lines.push('### Open questions');
+        for (const question of brief.openQuestions) {
+            lines.push(`- ${question}`);
+        }
+    }
+    return lines.join('\n');
+}
+function composeCommentBody(brief, audio) {
+    const parts = [];
+    if (audio) {
+        parts.push(`🔊 [Listen to the PR trailer](${audio.url}) (~${audio.durationSeconds}s)`);
+    }
+    parts.push(renderBrief(brief));
+    return parts.join('\n\n');
+}
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 
 /***/ }),
@@ -31969,6 +32165,14 @@ module.exports = require("node:http2");
 
 "use strict";
 module.exports = require("node:net");
+
+/***/ }),
+
+/***/ 6760:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
