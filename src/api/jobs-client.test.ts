@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { JobSubmissionError, pollJob, submitJob, type JobResponse } from './jobs-client';
 
 function jsonResponse(status: number, body: unknown) {
-  return { status, ok: status >= 200 && status < 300, json: async () => body } as Response;
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+  } as Response;
 }
 
 const pr = { title: 't', body: 'b', commitMessages: ['c'] };
@@ -39,6 +44,14 @@ describe('submitJob', () => {
     await expect(submitJob('https://api.example', 'key-1', pr, files, fetchFn)).rejects.toMatchObject({
       kind: 'rejected',
     });
+  });
+
+  it('rejected error message includes the status code and a body snippet', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(jsonResponse(400, { error: 'Invalid request body' }));
+
+    await expect(submitJob('https://api.example', 'key-1', pr, files, fetchFn)).rejects.toThrow(
+      /400.*Invalid request body/s,
+    );
   });
 
   it('JobSubmissionError is an instance of Error', () => {
@@ -139,5 +152,35 @@ describe('pollJob', () => {
     await expect(
       pollJob('https://api.example', 'key-1', 'job-1', { fetchFn, sleepFn: vi.fn(), now: () => 0 }),
     ).rejects.toThrow(/job-1/);
+  });
+
+  it('throws with the status code and a body snippet when a poll request itself fails', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(jsonResponse(500, { error: 'internal error' }));
+
+    await expect(
+      pollJob('https://api.example', 'key-1', 'job-1', { fetchFn, sleepFn: vi.fn(), now: () => 0 }),
+    ).rejects.toThrow(/500.*internal error/s);
+  });
+
+  it('invokes onStatus for every observed job status, including the terminal one', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(200, { status: 'processing', brief: null, audio: null, error: null }))
+      .mockResolvedValueOnce(jsonResponse(200, { status: 'processing', brief: null, audio: null, error: null }))
+      .mockResolvedValueOnce(jsonResponse(200, doneJob));
+    let elapsed = 0;
+    const sleepFn = vi.fn(async (ms: number) => {
+      elapsed += ms;
+    });
+    const statuses: string[] = [];
+
+    await pollJob('https://api.example', 'key-1', 'job-1', {
+      fetchFn,
+      sleepFn,
+      now: () => elapsed,
+      onStatus: (status) => statuses.push(status),
+    });
+
+    expect(statuses).toEqual(['processing', 'processing', 'done']);
   });
 });

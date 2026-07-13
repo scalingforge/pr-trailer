@@ -74,7 +74,11 @@ export async function submitJob(
     throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
   }
   if (!response.ok) {
-    throw new JobSubmissionError('rejected', `pr-trailer-api job submission failed with status ${response.status}.`);
+    const bodyText = await response.text().catch(() => '');
+    throw new JobSubmissionError(
+      'rejected',
+      `pr-trailer-api job submission failed with status ${response.status}: ${bodyText.slice(0, 500) || '(empty body)'}`,
+    );
   }
 
   const body = (await response.json()) as { jobId: string };
@@ -85,6 +89,7 @@ export interface PollDeps {
   fetchFn?: typeof fetch;
   sleepFn?: (ms: number) => Promise<void>;
   now?: () => number;
+  onStatus?: (status: JobResponse['status']) => void;
 }
 
 export type PollResult =
@@ -114,7 +119,14 @@ export async function pollJob(
     const response = await fetchFn(`${apiUrl}/v1/jobs/${jobId}`, {
       headers: { 'X-Api-Key': apiKey },
     });
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => '');
+      throw new Error(
+        `pr-trailer-api job status check for ${jobId} failed with status ${response.status}: ${bodyText.slice(0, 500) || '(empty body)'}`,
+      );
+    }
     const job = (await response.json()) as JobResponse;
+    deps.onStatus?.(job.status);
 
     if (job.status === 'done') {
       if (!job.brief) {
