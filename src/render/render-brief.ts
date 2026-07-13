@@ -9,7 +9,7 @@ const RISK_EMOJI: Record<RiskLevel, string> = {
 export function renderBrief(brief: Brief): string {
   const lines: string[] = [];
 
-  lines.push('## 🚦 Review Brief');
+  lines.push('## 🚦 Review Brief.  Check it out!');
   lines.push('');
   lines.push(brief.summary);
   lines.push('');
