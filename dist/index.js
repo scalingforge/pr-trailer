@@ -31727,7 +31727,8 @@ async function submitJob(apiUrl, apiKey, pr, files, fetchFn = fetch) {
         throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
     }
     if (!response.ok) {
-        throw new JobSubmissionError('rejected', `pr-trailer-api job submission failed with status ${response.status}.`);
+        const bodyText = await response.text().catch(() => '');
+        throw new JobSubmissionError('rejected', `pr-trailer-api job submission failed with status ${response.status}: ${bodyText.slice(0, 500) || '(empty body)'}`);
     }
     const body = (await response.json());
     return body.jobId;
@@ -31746,7 +31747,12 @@ async function pollJob(apiUrl, apiKey, jobId, deps = {}) {
         const response = await fetchFn(`${apiUrl}/v1/jobs/${jobId}`, {
             headers: { 'X-Api-Key': apiKey },
         });
+        if (!response.ok) {
+            const bodyText = await response.text().catch(() => '');
+            throw new Error(`pr-trailer-api job status check for ${jobId} failed with status ${response.status}: ${bodyText.slice(0, 500) || '(empty body)'}`);
+        }
         const job = (await response.json());
+        deps.onStatus?.(job.status);
         if (job.status === 'done') {
             if (!job.brief) {
                 throw new Error(`Job ${jobId} reported status "done" without a brief.`);
@@ -31935,7 +31941,10 @@ async function run() {
         }
         throw err;
     }
-    const result = await (0, jobs_client_1.pollJob)(apiUrl, apiKey, jobId);
+    core.info(`Submitted job ${jobId}`);
+    const result = await (0, jobs_client_1.pollJob)(apiUrl, apiKey, jobId, {
+        onStatus: (status) => core.info(`Job ${jobId} status: ${status}`),
+    });
     if (result.outcome === 'error') {
         core.warning('pr-trailer-api reported a job error; skipping comment.');
         return;

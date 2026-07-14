@@ -55,7 +55,11 @@ async function run(): Promise<void> {
     throw err;
   }
 
-  const result = await pollJob(apiUrl, apiKey, jobId);
+  core.info(`Submitted job ${jobId}`);
+
+  const result = await pollJob(apiUrl, apiKey, jobId, {
+    onStatus: (status) => core.info(`Job ${jobId} status: ${status}`),
+  });
 
   if (result.outcome === 'error') {
     core.warning('pr-trailer-api reported a job error; skipping comment.');
