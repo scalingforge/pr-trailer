@@ -2,7 +2,7 @@
 
 A GitHub Action that analyzes a pull request and posts a risk-prioritized
 review brief as a PR comment — updated in place on every push, never
-duplicated.
+duplicated
 
 ## Quickstart
 
