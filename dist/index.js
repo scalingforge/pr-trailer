@@ -31980,7 +31980,7 @@ const RISK_EMOJI = {
 };
 function renderBrief(brief) {
     const lines = [];
-    lines.push('## 🚦 Review Brief');
+    lines.push('## 🚦 Review Brief.  Check it out!');
     lines.push('');
     lines.push(brief.summary);
     lines.push('');
