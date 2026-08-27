@@ -1,5 +1,5 @@
 name: 'pr-trailer'
-description: 'Reduces the time a human-reviewer takes to approve a PR with confidence. Creates a PR audio trailer covering intent, files to focus and major risks'
+description: 'Reduces the time a human-reviewer takes to approve a PR with confidence. Creates an audio trailer covering intent, files to focus and major risks'
 branding:
   icon: 'git-pull-request'
   color: 'purple'
