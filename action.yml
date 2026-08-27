@@ -1,0 +1,23 @@
+name: 'pr-trailer'
+description: 'Analyzes a pull request and posts a risk-prioritized review brief as a comment.'
+branding:
+  icon: 'git-pull-request'
+  color: 'purple'
+inputs:
+  api-key:
+    description: 'pr-trailer-api key used to authenticate requests to the analysis service.'
+    required: true
+  api-url:
+    description: 'Base URL of the deployed pr-trailer-api service.'
+    required: true
+  github-token:
+    description: 'Token used to read PR data and post the comment.'
+    required: false
+    default: ${{ github.token }}
+  exclude-files:
+    description: 'Comma-separated list of filenames to exclude from diff extraction, overriding the default lockfile exclusions.'
+    required: false
+    default: 'package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock'
+runs:
+  using: 'node24'
+  main: 'dist/index.js'

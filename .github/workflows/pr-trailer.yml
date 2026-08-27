@@ -1,0 +1,23 @@
+name: pr-trailer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  run-pr-trailer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run pr-trailer
+        uses: ./
+        with:
+          api-key: ${{ secrets.PR_TRAILER_API_KEY }}
+          api-url: ${{ vars.PR_TRAILER_API_URL }}
+          github-token: ${{ github.token }}
