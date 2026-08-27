@@ -1,0 +1,62 @@
+pr-trailer License Agreement
+
+Copyright (c) 2026 ScalingForge. All rights reserved.
+
+This software (the "Action") is proprietary and confidential to
+ScalingForge. It is made publicly readable for transparency and for use
+with the hosted pr-trailer service. It is not open source software.
+
+1. GRANT OF LICENSE
+
+Subject to the terms below, ScalingForge grants you a limited,
+non-exclusive, non-transferable, revocable license to download and execute
+the Action within your own continuous integration workflows, solely for
+the purpose of interacting with the hosted pr-trailer service operated by
+ScalingForge.
+
+2. RESTRICTIONS
+
+You may not:
+
+  (a) redistribute, sublicense, sell, rent, lease, or otherwise transfer
+      the Action or any portion of it;
+  (b) modify the Action or create derivative works based on it;
+  (c) reverse engineer, decompile, or disassemble the Action, except to
+      the extent such restriction is prohibited by applicable law;
+  (d) remove, obscure, or alter any copyright, trademark, or other
+      proprietary notice contained in the Action;
+  (e) use the Action, or any information derived from it, to develop,
+      market, or operate a product or service that competes with
+      pr-trailer or the services of ScalingForge.
+
+3. RESERVATION OF RIGHTS
+
+All rights not expressly granted in Section 1 are reserved by
+ScalingForge. No rights are granted by implication, estoppel, or
+otherwise.
+
+4. SERVICE TERMS
+
+Use of the hosted pr-trailer service that the Action communicates with is
+governed separately by the pr-trailer terms of service. This license
+covers only the Action itself.
+
+5. TERMINATION
+
+This license terminates automatically if you breach any of its terms. Upon
+termination you must cease all use of the Action.
+
+6. DISCLAIMER OF WARRANTY
+
+THE ACTION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL SCALINGFORGE BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE ACTION OR THE USE OR OTHER
+DEALINGS IN THE ACTION.
+
+For licensing enquiries, contact yasel@scalingforge.com.
