@@ -1,5 +1,5 @@
 name: 'pr-trailer'
-description: 'Analyzes a pull request and posts a risk-prioritized review brief as a comment.'
+description: 'Reduces the time a human reviewer takes to approve a PR with confidence.  Generates an audio trailer of the pull request changes. The trailer covers the main intent, the places to focus more and potential risks exposed.  Listen to the trailer while you review the changes and approve or reject them with confidence. …It’s like a quick call with the author(s) without wasting anyone’s time.'
 branding:
   icon: 'git-pull-request'
   color: 'purple'
