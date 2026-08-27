@@ -1,5 +1,8 @@
 name: 'pr-trailer'
 description: 'Analyzes a pull request and posts a risk-prioritized review brief as a comment.'
+branding:
+  icon: 'git-pull-request'
+  color: 'purple'
 inputs:
   api-key:
     description: 'pr-trailer-api key used to authenticate requests to the analysis service.'
