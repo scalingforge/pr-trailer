@@ -52,7 +52,15 @@ THE ACTION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-7. LIMITATION OF LIABILITY
+7. THIRD-PARTY COMPONENTS
+
+The distributed bundle (dist/index.js) incorporates third-party open source
+components, each of which remains subject to its own license. Their
+copyright and permission notices are retained inline within the bundle.
+Nothing in this Agreement limits the rights you have in those components
+under their respective licenses.
+
+8. LIMITATION OF LIABILITY
 
 IN NO EVENT SHALL SCALINGFORGE BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING

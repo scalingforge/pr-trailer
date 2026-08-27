@@ -83,4 +83,15 @@ describe('upsertPrComment', () => {
     expect(contentIndex).toBeGreaterThan(markerIndex);
     expect(footerIndex).toBeGreaterThan(contentIndex);
   });
+
+  it('links the footer to the canonical repo, not the pre-rename name', async () => {
+    const { octokit, createComment } = createFakeOctokit([]);
+
+    await upsertPrComment(octokit, params, 'brief content');
+
+    const body = createComment.mock.calls[0][0].body as string;
+
+    expect(body).toContain('https://github.com/yasel-scf/pr-trailer)');
+    expect(body).not.toContain('pr-trailer-ghaction');
+  });
 });

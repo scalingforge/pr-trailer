@@ -4,7 +4,7 @@ export type Octokit = ReturnType<typeof github.getOctokit>;
 
 export const PR_TRAILER_MARKER = '<!-- pr-trailer:v1 -->';
 
-const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer-ghaction)*';
+const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*';
 
 function composeBody(body: string): string {
   return `${PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FOOTER}`;
