@@ -1,12 +1,24 @@
 # pr-trailer
 
-A GitHub Action that analyzes a pull request and posts a risk-prioritized
-review brief as a PR comment — updated in place on every push, never
-duplicated.
+**Know what a pull request changed before you start reading it.**
+
+`pr-trailer` analyzes each pull request and posts a single, risk-prioritized
+review brief as a comment — which files are risky, why, and what order to
+read them in. The comment updates in place on every push, so it never
+clutters the thread.
+
+Built and operated by [ScalingForge](https://scalingforge.com).
+
+## What you get
+
+- **A risk ranking per file** — so you spend review time where it matters.
+- **A suggested reading order** — the dependency-aware path through the diff.
+- **An audio trailer** — a short spoken summary of the PR, when available.
+- **One comment, always current** — updated in place, never duplicated.
 
 ## Quickstart
 
-Add this workflow file to your repo at `.github/workflows/pr-trailer.yml`:
+Add this workflow to your repository at `.github/workflows/pr-trailer.yml`:
 
 ```yaml
 name: pr-trailer
@@ -27,34 +39,43 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run pr-trailer
-        uses: yasel-scf/pr-trailer-ghaction@v1
+        uses: yasel-scf/pr-trailer@v1
         with:
           api-key: ${{ secrets.PR_TRAILER_API_KEY }}
           api-url: ${{ vars.PR_TRAILER_API_URL }}
           github-token: ${{ github.token }}
 ```
 
-That's it — no other code changes are needed in your repo.
+No other changes to your codebase are needed.
 
 ## Getting an API key
 
-Request an API key at https://TODO-replace-with-pr-trailer-signup-url, then
-add it as a secret in your repo (**Settings → Secrets and variables →
-Actions**) named `PR_TRAILER_API_KEY`.
+`pr-trailer` is a hosted service. Self-serve sign-up is coming soon — until
+then, email yasel@scalingforge.com to request access.
+
+Once you have a key:
+
+1. Add it as a repository secret named `PR_TRAILER_API_KEY`
+   (**Settings → Secrets and variables → Actions → New repository secret**).
+2. Add the service URL you were given as a repository variable named
+   `PR_TRAILER_API_URL` (same screen, **Variables** tab).
 
 ## Inputs
 
 | Input | Required | Default | Description |
 |---|---|---|---|
-| `api-key` | Yes | — | Authenticates requests to the pr-trailer analysis service. |
-| `api-url` | Yes | — | Base URL of the deployed `pr-trailer-api` service. |
+| `api-key` | Yes | — | Authenticates requests to the pr-trailer service. |
+| `api-url` | Yes | — | Base URL of the pr-trailer service. |
 | `github-token` | No | `${{ github.token }}` | Used to read PR data and post/update the review comment. |
 | `exclude-files` | No | `package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock` | Comma-separated filenames excluded from diff extraction. An empty string excludes nothing. |
 
-## Example output
+## Required permissions
 
-Once installed, `pr-trailer` posts a single comment on each PR and keeps it
-up to date as you push new commits — you'll never see duplicate comments.
+The workflow needs `contents: read` to read the diff and
+`pull-requests: write` to post the review comment. `pr-trailer` never
+writes to your source code.
+
+## Example output
 
 > 🔊 [Listen to the PR trailer](https://cdn.example.com/audio.mp3) (~42s)
 >
@@ -77,11 +98,23 @@ up to date as you push new commits — you'll never see duplicate comments.
 > 3. `README.md` — no review needed, informational
 >
 > ---
-> 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer-ghaction)*
+> 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
 
-The audio link is omitted entirely when text-to-speech fails or degrades —
-the comment falls back to text-only with no visible error.
+The audio link is omitted entirely when text-to-speech is unavailable — the
+comment falls back to text-only with no visible error.
 
-## Contributing
+## Support
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
+- **Bugs and feature requests:** [open an issue](https://github.com/yasel-scf/pr-trailer/issues)
+- **Account, billing, or API keys:** yasel@scalingforge.com
+- **Security vulnerabilities:** see [SECURITY.md](./SECURITY.md) — please don't file a public issue
+
+## Licensing
+
+`pr-trailer` is proprietary software, published publicly for transparency
+but **not open source**. You may run it in your own workflows to use the
+hosted service; redistribution and modification are not permitted. See
+[LICENSE](./LICENSE) for the full terms and
+[CONTRIBUTING.md](./CONTRIBUTING.md) for how to report bugs.
+
+© 2026 ScalingForge. All rights reserved.
