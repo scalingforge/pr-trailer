@@ -57,4 +57,10 @@ Scope is optional and should name the affected area (e.g. `feat(github): ...`).
 Keep commits small and scoped to one logical change — prefer several small
 commits over one large one.
 
+`npm install` wires up a pre-commit hook (see `.githooks/pre-commit`) that
+rebuilds `dist/` and stages it whenever a commit touches `src/`,
+`package.json`, `package-lock.json`, or `tsconfig.json`. This keeps CI's
+"dist/ is up to date" check from failing after a push — don't bypass it
+with `--no-verify`.
+
 Releases are cut manually — see [RELEASING.md](./RELEASING.md).

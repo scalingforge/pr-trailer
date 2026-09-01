@@ -8,6 +8,7 @@
     "node": "24.x"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "build": "ncc build src/index.ts -o dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
