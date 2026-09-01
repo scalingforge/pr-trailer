@@ -77,31 +77,16 @@ writes to your source code.
 
 ## Example output
 
-> 🔊 [Listen to the PR trailer](https://cdn.example.com/audio.mp3) (~42s)
->
-> ## 🚦 Review Brief
->
-> Adds a login feature with token-based session handling.
->
-> **Intent:** Add a login feature
-> **Overall risk:** 🔴 High
->
-> | File | Risk | Why |
-> |---|---|---|
-> | `src/auth/session.ts` | 🔴 High | Touches token expiry logic |
-> | `src/api/users.ts` | 🟡 Medium | New endpoint, no auth changes |
-> | `README.md` | 🟢 Low | Docs only |
->
-> ### Suggested reading order
-> 1. `src/auth/session.ts` — the core logic change
-> 2. `src/api/users.ts` — depends on the above
-> 3. `README.md` — no review needed, informational
+> **Risk Score:** 🔴 High
+> **Intent Summary:** Adds a login feature with token-based session handling and a new /login route.
+> **PR trailer Audio:** 🔊 [Listen to the PR trailer](https://cdn.example.com/audio.mp3) (~42s)
 >
 > ---
 > 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
 
-The audio link is omitted entirely when text-to-speech is unavailable — the
-comment falls back to text-only with no visible error.
+The comment is always exactly these three lines. When text-to-speech is
+unavailable, the audio line reads `🔇 Not generated for this run` — the
+line is never omitted and no error is surfaced.
 
 ## Support
 
