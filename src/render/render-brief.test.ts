@@ -35,7 +35,7 @@ describe('composeCommentBody', () => {
     expect(sections).toHaveLength(4);
     expect(sections[0]).toBe('**Risk Score:** 🔴 High');
     expect(sections[1]).toBe(
-      '**PR trailer Audio:** 🔊 <a href="https://cdn.example/audio.mp3" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~42s)',
+      '**PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)',
     );
     expect(sections[2]).toBe('**Intent Brief:** Add a login feature');
     expect(sections[3]).toBe(
@@ -48,7 +48,7 @@ describe('composeCommentBody', () => {
 
     const sections = body.split('\n\n');
     expect(sections[1]).toBe('**PR trailer Audio:** 🔇 Not generated for this run');
-    expect(body).not.toContain('target="_blank"');
+    expect(body).not.toContain('[Listen PR trailer]');
   });
 
   it.each([
@@ -71,16 +71,16 @@ describe('composeCommentBody', () => {
     expect(emptyBody.split('\n\n')).toHaveLength(4);
   });
 
-  it('opens the audio link in a new tab via target="_blank" with rel="noopener noreferrer"', () => {
+  it('uses a plain markdown link with a text hint to open in a new tab (GitHub strips target="_blank" from comment HTML)', () => {
     const body = composeCommentBody(baseBrief, {
       url: 'https://cdn.example/audio.mp3',
       expiresAt: '2026-08-01T00:00:00.000Z',
       durationSeconds: 42,
     });
 
-    expect(body).toContain(
-      '<a href="https://cdn.example/audio.mp3" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a>',
-    );
+    expect(body).toContain('[Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)');
+    expect(body).not.toContain('target="_blank"');
+    expect(body).not.toContain('<a ');
   });
 
   it('never includes the old table, heading, or list sections', () => {

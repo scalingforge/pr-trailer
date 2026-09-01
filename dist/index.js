@@ -31988,7 +31988,7 @@ function renderAudio(audio) {
     if (!audio) {
         return '🔇 Not generated for this run';
     }
-    return `🔊 <a href="${audio.url}" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~${audio.durationSeconds}s)`;
+    return `🔊 [Listen PR trailer](${audio.url}) (open a new tab, ~${audio.durationSeconds}s)`;
 }
 function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);

@@ -79,7 +79,7 @@ writes to your source code.
 
 > **Risk Score:** 🔴 High
 >
-> **PR trailer Audio:** 🔊 <a href="https://cdn.example.com/audio.mp3" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~42s)
+> **PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example.com/audio.mp3) (open a new tab, ~42s)
 >
 > **Intent Brief:** Add a login feature
 >
@@ -91,7 +91,9 @@ writes to your source code.
 The comment is always exactly these four sections, in this order, each
 separated by a blank line. When text-to-speech is unavailable, the audio
 section reads `🔇 Not generated for this run` — it is never omitted and no
-error is surfaced. The audio link opens in a new tab.
+error is surfaced. GitHub strips `target="_blank"` from PR comments, so the
+link opens in the same tab by default — the "(open a new tab)" text is a
+hint for readers who want to middle-click/cmd-click it instead.
 
 ## Support
 
