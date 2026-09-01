@@ -8,17 +8,17 @@ const RISK_EMOJI: Record<RiskLevel, string> = {
 
 export function composeCommentBody(brief: Brief, audio: AudioInfo | null): string {
   const riskLine = `**Risk Score:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`;
-  const intentLine = `**Intent Summary:** ${brief.summary}`;
   const audioLine = `**PR trailer Audio:** ${renderAudio(audio)}`;
+  const intentLine = `**Intent Summary:** ${brief.summary}`;
 
-  return [riskLine, intentLine, audioLine].join('\n');
+  return [riskLine, audioLine, intentLine].join('\n\n');
 }
 
 function renderAudio(audio: AudioInfo | null): string {
   if (!audio) {
     return '🔇 Not generated for this run';
   }
-  return `🔊 [Listen to the PR trailer](${audio.url}) (~${audio.durationSeconds}s)`;
+  return `🔊 <a href="${audio.url}" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~${audio.durationSeconds}s)`;
 }
 
 function capitalize(s: string): string {

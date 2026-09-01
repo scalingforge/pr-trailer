@@ -78,15 +78,18 @@ writes to your source code.
 ## Example output
 
 > **Risk Score:** 🔴 High
+>
+> **PR trailer Audio:** 🔊 <a href="https://cdn.example.com/audio.mp3" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~42s)
+>
 > **Intent Summary:** Adds a login feature with token-based session handling and a new /login route.
-> **PR trailer Audio:** 🔊 [Listen to the PR trailer](https://cdn.example.com/audio.mp3) (~42s)
 >
 > ---
 > 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
 
-The comment is always exactly these three lines. When text-to-speech is
-unavailable, the audio line reads `🔇 Not generated for this run` — the
-line is never omitted and no error is surfaced.
+The comment is always exactly these three sections, in this order, each
+separated by a blank line. When text-to-speech is unavailable, the audio
+section reads `🔇 Not generated for this run` — it is never omitted and no
+error is surfaced. The audio link opens in a new tab.
 
 ## Support
 

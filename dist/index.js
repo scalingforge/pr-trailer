@@ -31979,15 +31979,15 @@ const RISK_EMOJI = {
 };
 function composeCommentBody(brief, audio) {
     const riskLine = `**Risk Score:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`;
-    const intentLine = `**Intent Summary:** ${brief.summary}`;
     const audioLine = `**PR trailer Audio:** ${renderAudio(audio)}`;
-    return [riskLine, intentLine, audioLine].join('\n');
+    const intentLine = `**Intent Summary:** ${brief.summary}`;
+    return [riskLine, audioLine, intentLine].join('\n\n');
 }
 function renderAudio(audio) {
     if (!audio) {
         return '🔇 Not generated for this run';
     }
-    return `🔊 [Listen to the PR trailer](${audio.url}) (~${audio.durationSeconds}s)`;
+    return `🔊 <a href="${audio.url}" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~${audio.durationSeconds}s)`;
 }
 function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
