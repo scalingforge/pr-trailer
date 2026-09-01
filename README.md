@@ -83,7 +83,10 @@ writes to your source code.
 >
 > **Intent Brief:** Add a login feature
 >
-> **Intent Description:** Adds a login feature with token-based session handling and a new /login route.
+> <details>
+> <summary>Intent Description</summary>
+> Adds a login feature with token-based session handling and a new /login route.
+> </details>
 >
 > ---
 > 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
@@ -94,6 +97,11 @@ section reads `🔇 Not generated for this run` — it is never omitted and no
 error is surfaced. GitHub strips `target="_blank"` from PR comments, so the
 link opens in the same tab by default — the "(open a new tab)" text is a
 hint for readers who want to middle-click/cmd-click it instead.
+
+Intent Description is collapsed by default: the first three sections
+(Risk Score, Audio, Intent Brief) are what a reviewer sees at a glance —
+the fuller description is one click away, not forced into the initial
+read.
 
 ## Support
 

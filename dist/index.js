@@ -31981,8 +31981,8 @@ function composeCommentBody(brief, audio) {
     const riskLine = `**Risk Score:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`;
     const audioLine = `**PR trailer Audio:** ${renderAudio(audio)}`;
     const intentBriefLine = `**Intent Brief:** ${brief.intent}`;
-    const intentDescriptionLine = `**Intent Description:** ${brief.summary}`;
-    return [riskLine, audioLine, intentBriefLine, intentDescriptionLine].join('\n\n');
+    const intentDescriptionSection = `<details>\n<summary>Intent Description</summary>\n${brief.summary}\n</details>`;
+    return [riskLine, audioLine, intentBriefLine, intentDescriptionSection].join('\n\n');
 }
 function renderAudio(audio) {
     if (!audio) {

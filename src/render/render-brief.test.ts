@@ -39,8 +39,26 @@ describe('composeCommentBody', () => {
     );
     expect(sections[2]).toBe('**Intent Brief:** Add a login feature');
     expect(sections[3]).toBe(
-      '**Intent Description:** Adds a login feature with token-based session handling and a new /login route.',
+      '<details>\n<summary>Intent Description</summary>\nAdds a login feature with token-based session handling and a new /login route.\n</details>',
     );
+  });
+
+  it('collapses Intent Description behind a <details> disclosure, default-closed, so the visible comment is 3 short lines', () => {
+    const body = composeCommentBody(baseBrief, null);
+    const sections = body.split('\n\n');
+
+    // The first 3 sections carry the always-visible, glance-scale content.
+    expect(sections[0]).toMatch(/^\*\*Risk Score:\*\*/);
+    expect(sections[1]).toMatch(/^\*\*PR trailer Audio:\*\*/);
+    expect(sections[2]).toMatch(/^\*\*Intent Brief:\*\*/);
+
+    // The 4th section is the collapsed disclosure — no "open" attribute, so
+    // it renders closed by default.
+    expect(sections[3]).toContain('<details>');
+    expect(sections[3]).not.toContain('<details open>');
+    expect(sections[3]).toContain('<summary>Intent Description</summary>');
+    expect(sections[3]).toContain('</details>');
+    expect(sections[3]).toContain(baseBrief.summary);
   });
 
   it('renders the fixed fallback audio line when audio is null, with no link markup', () => {
@@ -65,10 +83,16 @@ describe('composeCommentBody', () => {
     const fullBody = composeCommentBody(baseBrief, null);
     const emptyBody = composeCommentBody(emptyBrief, null);
 
-    const shapeOf = (body: string) => body.split('\n\n').map((section) => section.split(':')[0]);
-    expect(shapeOf(fullBody)).toEqual(shapeOf(emptyBody));
-    expect(fullBody.split('\n\n')).toHaveLength(4);
-    expect(emptyBody.split('\n\n')).toHaveLength(4);
+    for (const body of [fullBody, emptyBody]) {
+      const sections = body.split('\n\n');
+      expect(sections).toHaveLength(4);
+      expect(sections[0]).toMatch(/^\*\*Risk Score:\*\*/);
+      expect(sections[1]).toMatch(/^\*\*PR trailer Audio:\*\*/);
+      expect(sections[2]).toMatch(/^\*\*Intent Brief:\*\*/);
+      expect(sections[3]).toBe(
+        `<details>\n<summary>Intent Description</summary>\n${body === fullBody ? baseBrief.summary : emptyBrief.summary}\n</details>`,
+      );
+    }
   });
 
   it('uses a plain markdown link with a text hint to open in a new tab (GitHub strips target="_blank" from comment HTML)', () => {
