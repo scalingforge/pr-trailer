@@ -24,7 +24,7 @@ const emptyBrief: Brief = {
 };
 
 describe('composeCommentBody', () => {
-  it('renders the three sections, in order (risk, audio, intent), separated by a blank line', () => {
+  it('renders the four sections, in order (risk, audio, intent brief, intent description), separated by a blank line', () => {
     const body = composeCommentBody(baseBrief, {
       url: 'https://cdn.example/audio.mp3',
       expiresAt: '2026-08-01T00:00:00.000Z',
@@ -32,13 +32,14 @@ describe('composeCommentBody', () => {
     });
 
     const sections = body.split('\n\n');
-    expect(sections).toHaveLength(3);
+    expect(sections).toHaveLength(4);
     expect(sections[0]).toBe('**Risk Score:** 🔴 High');
     expect(sections[1]).toBe(
       '**PR trailer Audio:** 🔊 <a href="https://cdn.example/audio.mp3" target="_blank" rel="noopener noreferrer">Listen to the PR trailer</a> (~42s)',
     );
-    expect(sections[2]).toBe(
-      '**Intent Summary:** Adds a login feature with token-based session handling and a new /login route.',
+    expect(sections[2]).toBe('**Intent Brief:** Add a login feature');
+    expect(sections[3]).toBe(
+      '**Intent Description:** Adds a login feature with token-based session handling and a new /login route.',
     );
   });
 
@@ -60,14 +61,14 @@ describe('composeCommentBody', () => {
     expect(body.split('\n\n')[0]).toBe(`**Risk Score:** ${expected}`);
   });
 
-  it('renders the same three-section shape regardless of files/readOrder/openQuestions content', () => {
+  it('renders the same four-section shape regardless of files/readOrder/openQuestions content', () => {
     const fullBody = composeCommentBody(baseBrief, null);
     const emptyBody = composeCommentBody(emptyBrief, null);
 
     const shapeOf = (body: string) => body.split('\n\n').map((section) => section.split(':')[0]);
     expect(shapeOf(fullBody)).toEqual(shapeOf(emptyBody));
-    expect(fullBody.split('\n\n')).toHaveLength(3);
-    expect(emptyBody.split('\n\n')).toHaveLength(3);
+    expect(fullBody.split('\n\n')).toHaveLength(4);
+    expect(emptyBody.split('\n\n')).toHaveLength(4);
   });
 
   it('opens the audio link in a new tab via target="_blank" with rel="noopener noreferrer"', () => {

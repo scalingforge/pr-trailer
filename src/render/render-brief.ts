@@ -9,9 +9,10 @@ const RISK_EMOJI: Record<RiskLevel, string> = {
 export function composeCommentBody(brief: Brief, audio: AudioInfo | null): string {
   const riskLine = `**Risk Score:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`;
   const audioLine = `**PR trailer Audio:** ${renderAudio(audio)}`;
-  const intentLine = `**Intent Summary:** ${brief.summary}`;
+  const intentBriefLine = `**Intent Brief:** ${brief.intent}`;
+  const intentDescriptionLine = `**Intent Description:** ${brief.summary}`;
 
-  return [riskLine, audioLine, intentLine].join('\n\n');
+  return [riskLine, audioLine, intentBriefLine, intentDescriptionLine].join('\n\n');
 }
 
 function renderAudio(audio: AudioInfo | null): string {
