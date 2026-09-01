@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Rebuilds dist/ and stages it whenever a commit touches files that affect
+# the bundle, so CI's "dist/ is up to date" check never fails on push.
+set -e
+
+if git diff --cached --name-only | grep -qE '^(src/|package(-lock)?\.json$|tsconfig\.json$)'; then
+  npm run build
+  git add dist
+fi

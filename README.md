@@ -77,31 +77,32 @@ writes to your source code.
 
 ## Example output
 
-> 🔊 [Listen to the PR trailer](https://cdn.example.com/audio.mp3) (~42s)
+> **Risk Score:** 🔴 High
 >
-> ## 🚦 Review Brief
+> **PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example.com/audio.mp3) (open a new tab, ~42s)
 >
-> Adds a login feature with token-based session handling.
+> **Intent Brief:** Add a login feature
 >
-> **Intent:** Add a login feature
-> **Overall risk:** 🔴 High
+> <details>
+> <summary>Intent Description</summary>
 >
-> | File | Risk | Why |
-> |---|---|---|
-> | `src/auth/session.ts` | 🔴 High | Touches token expiry logic |
-> | `src/api/users.ts` | 🟡 Medium | New endpoint, no auth changes |
-> | `README.md` | 🟢 Low | Docs only |
->
-> ### Suggested reading order
-> 1. `src/auth/session.ts` — the core logic change
-> 2. `src/api/users.ts` — depends on the above
-> 3. `README.md` — no review needed, informational
+> Adds a login feature with token-based session handling and a new /login route.
+> </details>
 >
 > ---
 > 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
 
-The audio link is omitted entirely when text-to-speech is unavailable — the
-comment falls back to text-only with no visible error.
+The comment is always exactly these four sections, in this order, each
+separated by a blank line. When text-to-speech is unavailable, the audio
+section reads `🔇 Not generated for this run` — it is never omitted and no
+error is surfaced. GitHub strips `target="_blank"` from PR comments, so the
+link opens in the same tab by default — the "(open a new tab)" text is a
+hint for readers who want to middle-click/cmd-click it instead.
+
+Intent Description is collapsed by default: the first three sections
+(Risk Score, Audio, Intent Brief) are what a reviewer sees at a glance —
+the fuller description is one click away, not forced into the initial
+read.
 
 ## Support
 

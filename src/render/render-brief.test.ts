@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { composeCommentBody, renderBrief } from './render-brief';
+import { composeCommentBody } from './render-brief';
 import type { Brief } from '../api/jobs-client';
 
-const fullBrief: Brief = {
-  summary: 'Adds a login feature.',
+const baseBrief: Brief = {
+  summary: 'Adds a login feature with token-based session handling and a new /login route.',
   intent: 'Add a login feature',
   riskLevel: 'high',
   files: [
@@ -15,7 +15,7 @@ const fullBrief: Brief = {
 };
 
 const emptyBrief: Brief = {
-  summary: 'Trivial change.',
+  summary: 'Fix a typo in the README.',
   intent: 'Fix a typo',
   riskLevel: 'low',
   files: [],
@@ -23,61 +23,97 @@ const emptyBrief: Brief = {
   openQuestions: [],
 };
 
-describe('renderBrief', () => {
-  it('includes the summary, intent, and overall risk', () => {
-    const markdown = renderBrief(fullBrief);
-
-    expect(markdown).toContain('Adds a login feature.');
-    expect(markdown).toContain('Add a login feature');
-    expect(markdown).toContain('High');
-  });
-
-  it('renders a risk table row per file', () => {
-    const markdown = renderBrief(fullBrief);
-
-    expect(markdown).toContain('`src/auth/session.ts`');
-    expect(markdown).toContain('Touches token expiry logic');
-    expect(markdown).toContain('`README.md`');
-  });
-
-  it('renders the suggested reading order as a numbered list', () => {
-    const markdown = renderBrief(fullBrief);
-
-    expect(markdown).toContain('1. `src/auth/session.ts`');
-    expect(markdown).toContain('2. `README.md`');
-  });
-
-  it('renders open questions as a bullet list', () => {
-    const markdown = renderBrief(fullBrief);
-
-    expect(markdown).toContain('Is the token TTL configurable?');
-  });
-
-  it('omits the risk table, reading order, and open-questions sections when empty', () => {
-    const markdown = renderBrief(emptyBrief);
-
-    expect(markdown).not.toContain('| File | Risk | Why |');
-    expect(markdown).not.toContain('Suggested reading order');
-    expect(markdown).not.toContain('Open questions');
-  });
-});
-
 describe('composeCommentBody', () => {
-  it('prefixes the audio link line, with duration, when audio is present', () => {
-    const body = composeCommentBody(fullBrief, {
+  it('renders the exact fixed layout, with audio present', () => {
+    const body = composeCommentBody(baseBrief, {
       url: 'https://cdn.example/audio.mp3',
       expiresAt: '2026-08-01T00:00:00.000Z',
       durationSeconds: 42,
     });
 
-    expect(body.startsWith('🔊 [Listen to the PR trailer](https://cdn.example/audio.mp3) (~42s)')).toBe(true);
-    expect(body).toContain(renderBrief(fullBrief));
+    expect(body).toBe(
+      [
+        '**Risk Score:** 🔴 High',
+        '',
+        '**PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)',
+        '',
+        '**Intent Brief:** Add a login feature',
+        '',
+        '<details>',
+        '<summary>Intent Description</summary>',
+        '',
+        'Adds a login feature with token-based session handling and a new /login route.',
+        '</details>',
+      ].join('\n'),
+    );
   });
 
-  it('omits the audio line entirely when audio is null', () => {
-    const body = composeCommentBody(fullBrief, null);
+  it('renders the fixed fallback audio line when audio is null, with no link markup', () => {
+    const body = composeCommentBody(baseBrief, null);
 
-    expect(body).not.toContain('Listen to the PR trailer');
-    expect(body).toBe(renderBrief(fullBrief));
+    expect(body).toContain('**PR trailer Audio:** 🔇 Not generated for this run');
+    expect(body).not.toContain('[Listen PR trailer]');
+  });
+
+  it.each([
+    ['low', '🟢 Low'],
+    ['medium', '🟡 Medium'],
+    ['high', '🔴 High'],
+  ] as const)('renders the %s risk icon and label', (riskLevel, expected) => {
+    const body = composeCommentBody({ ...baseBrief, riskLevel }, null);
+
+    expect(body.startsWith(`**Risk Score:** ${expected}`)).toBe(true);
+  });
+
+  it('puts a blank line between <summary> and its content, so GitHub renders "Intent Description" as the disclosure label instead of falling back to a generic one', () => {
+    const body = composeCommentBody(baseBrief, null);
+
+    expect(body).toContain('<summary>Intent Description</summary>\n\n');
+  });
+
+  it('collapses Intent Description behind a <details> disclosure, default-closed (no "open" attribute)', () => {
+    const body = composeCommentBody(baseBrief, null);
+
+    expect(body).toContain('<details>\n<summary>Intent Description</summary>');
+    expect(body).not.toContain('<details open>');
+    expect(body).toContain('</details>');
+    expect(body.trimEnd().endsWith('</details>')).toBe(true);
+  });
+
+  it('renders the same fixed labels regardless of files/readOrder/openQuestions content', () => {
+    const fullBody = composeCommentBody(baseBrief, null);
+    const emptyBody = composeCommentBody(emptyBrief, null);
+
+    for (const body of [fullBody, emptyBody]) {
+      expect(body).toMatch(/^\*\*Risk Score:\*\*/);
+      expect(body).toContain('**PR trailer Audio:**');
+      expect(body).toContain('**Intent Brief:**');
+      expect(body).toContain('<summary>Intent Description</summary>');
+    }
+  });
+
+  it('uses a plain markdown link with a text hint to open in a new tab (GitHub strips target="_blank" from comment HTML)', () => {
+    const body = composeCommentBody(baseBrief, {
+      url: 'https://cdn.example/audio.mp3',
+      expiresAt: '2026-08-01T00:00:00.000Z',
+      durationSeconds: 42,
+    });
+
+    expect(body).toContain('[Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)');
+    expect(body).not.toContain('target="_blank"');
+    expect(body).not.toContain('<a ');
+  });
+
+  it('never includes the old table, heading, or list sections', () => {
+    const body = composeCommentBody(baseBrief, {
+      url: 'https://cdn.example/audio.mp3',
+      expiresAt: '2026-08-01T00:00:00.000Z',
+      durationSeconds: 42,
+    });
+
+    expect(body).not.toContain('Review Brief');
+    expect(body).not.toContain('| File | Risk | Why |');
+    expect(body).not.toContain('Suggested reading order');
+    expect(body).not.toContain('Open questions');
   });
 });
