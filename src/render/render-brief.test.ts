@@ -24,48 +24,34 @@ const emptyBrief: Brief = {
 };
 
 describe('composeCommentBody', () => {
-  it('renders the four sections, in order (risk, audio, intent brief, intent description), separated by a blank line', () => {
+  it('renders the exact fixed layout, with audio present', () => {
     const body = composeCommentBody(baseBrief, {
       url: 'https://cdn.example/audio.mp3',
       expiresAt: '2026-08-01T00:00:00.000Z',
       durationSeconds: 42,
     });
 
-    const sections = body.split('\n\n');
-    expect(sections).toHaveLength(4);
-    expect(sections[0]).toBe('**Risk Score:** 🔴 High');
-    expect(sections[1]).toBe(
-      '**PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)',
+    expect(body).toBe(
+      [
+        '**Risk Score:** 🔴 High',
+        '',
+        '**PR trailer Audio:** 🔊 [Listen PR trailer](https://cdn.example/audio.mp3) (open a new tab, ~42s)',
+        '',
+        '**Intent Brief:** Add a login feature',
+        '',
+        '<details>',
+        '<summary>Intent Description</summary>',
+        '',
+        'Adds a login feature with token-based session handling and a new /login route.',
+        '</details>',
+      ].join('\n'),
     );
-    expect(sections[2]).toBe('**Intent Brief:** Add a login feature');
-    expect(sections[3]).toBe(
-      '<details>\n<summary>Intent Description</summary>\nAdds a login feature with token-based session handling and a new /login route.\n</details>',
-    );
-  });
-
-  it('collapses Intent Description behind a <details> disclosure, default-closed, so the visible comment is 3 short lines', () => {
-    const body = composeCommentBody(baseBrief, null);
-    const sections = body.split('\n\n');
-
-    // The first 3 sections carry the always-visible, glance-scale content.
-    expect(sections[0]).toMatch(/^\*\*Risk Score:\*\*/);
-    expect(sections[1]).toMatch(/^\*\*PR trailer Audio:\*\*/);
-    expect(sections[2]).toMatch(/^\*\*Intent Brief:\*\*/);
-
-    // The 4th section is the collapsed disclosure — no "open" attribute, so
-    // it renders closed by default.
-    expect(sections[3]).toContain('<details>');
-    expect(sections[3]).not.toContain('<details open>');
-    expect(sections[3]).toContain('<summary>Intent Description</summary>');
-    expect(sections[3]).toContain('</details>');
-    expect(sections[3]).toContain(baseBrief.summary);
   });
 
   it('renders the fixed fallback audio line when audio is null, with no link markup', () => {
     const body = composeCommentBody(baseBrief, null);
 
-    const sections = body.split('\n\n');
-    expect(sections[1]).toBe('**PR trailer Audio:** 🔇 Not generated for this run');
+    expect(body).toContain('**PR trailer Audio:** 🔇 Not generated for this run');
     expect(body).not.toContain('[Listen PR trailer]');
   });
 
@@ -76,22 +62,33 @@ describe('composeCommentBody', () => {
   ] as const)('renders the %s risk icon and label', (riskLevel, expected) => {
     const body = composeCommentBody({ ...baseBrief, riskLevel }, null);
 
-    expect(body.split('\n\n')[0]).toBe(`**Risk Score:** ${expected}`);
+    expect(body.startsWith(`**Risk Score:** ${expected}`)).toBe(true);
   });
 
-  it('renders the same four-section shape regardless of files/readOrder/openQuestions content', () => {
+  it('puts a blank line between <summary> and its content, so GitHub renders "Intent Description" as the disclosure label instead of falling back to a generic one', () => {
+    const body = composeCommentBody(baseBrief, null);
+
+    expect(body).toContain('<summary>Intent Description</summary>\n\n');
+  });
+
+  it('collapses Intent Description behind a <details> disclosure, default-closed (no "open" attribute)', () => {
+    const body = composeCommentBody(baseBrief, null);
+
+    expect(body).toContain('<details>\n<summary>Intent Description</summary>');
+    expect(body).not.toContain('<details open>');
+    expect(body).toContain('</details>');
+    expect(body.trimEnd().endsWith('</details>')).toBe(true);
+  });
+
+  it('renders the same fixed labels regardless of files/readOrder/openQuestions content', () => {
     const fullBody = composeCommentBody(baseBrief, null);
     const emptyBody = composeCommentBody(emptyBrief, null);
 
     for (const body of [fullBody, emptyBody]) {
-      const sections = body.split('\n\n');
-      expect(sections).toHaveLength(4);
-      expect(sections[0]).toMatch(/^\*\*Risk Score:\*\*/);
-      expect(sections[1]).toMatch(/^\*\*PR trailer Audio:\*\*/);
-      expect(sections[2]).toMatch(/^\*\*Intent Brief:\*\*/);
-      expect(sections[3]).toBe(
-        `<details>\n<summary>Intent Description</summary>\n${body === fullBody ? baseBrief.summary : emptyBrief.summary}\n</details>`,
-      );
+      expect(body).toMatch(/^\*\*Risk Score:\*\*/);
+      expect(body).toContain('**PR trailer Audio:**');
+      expect(body).toContain('**Intent Brief:**');
+      expect(body).toContain('<summary>Intent Description</summary>');
     }
   });
 

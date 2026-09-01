@@ -85,6 +85,7 @@ writes to your source code.
 >
 > <details>
 > <summary>Intent Description</summary>
+>
 > Adds a login feature with token-based session handling and a new /login route.
 > </details>
 >
