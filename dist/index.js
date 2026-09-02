@@ -31826,9 +31826,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PR_TRAILER_MARKER = void 0;
 exports.upsertPrComment = upsertPrComment;
 exports.PR_TRAILER_MARKER = '<!-- pr-trailer:v1 -->';
+const FEEDBACK_LINE = '🌱 *Help us grow — [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8) and shape what pr-trailer becomes next.*';
 const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*';
 function composeBody(body) {
-    return `${exports.PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FOOTER}`;
+    return `${exports.PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FEEDBACK_LINE}\n\n${FOOTER}`;
 }
 async function upsertPrComment(octokit, params, body) {
     const { owner, repo, pullNumber } = params;
