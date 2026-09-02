@@ -34,6 +34,9 @@ jobs:
   run-pr-trailer:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Run pr-trailer
         uses: yasel-scf/pr-trailer@v1
         with:
@@ -64,6 +67,7 @@ Once you have a key:
 | `api-url` | Yes | — | Base URL of the pr-trailer service. |
 | `github-token` | No | `${{ github.token }}` | Used to read PR data and post/update the review comment. |
 | `exclude-files` | No | `package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock` | Comma-separated filenames excluded from diff extraction. An empty string excludes nothing. |
+| `verbosity` | No | `info` | Logs verbosity: `error`, `warn`, `notice`, `info`, `debug` |
 
 ## Required permissions
 

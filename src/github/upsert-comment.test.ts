@@ -69,7 +69,7 @@ describe('upsertPrComment', () => {
     expect(createComment).toHaveBeenCalledTimes(1);
   });
 
-  it('composes the body as marker, then content, then footer signature', async () => {
+  it('composes the body as marker, then content, then feedback line, then footer signature', async () => {
     const { octokit, createComment } = createFakeOctokit([]);
 
     await upsertPrComment(octokit, params, 'brief content');
@@ -77,11 +77,25 @@ describe('upsertPrComment', () => {
     const body = createComment.mock.calls[0][0].body as string;
     const markerIndex = body.indexOf(PR_TRAILER_MARKER);
     const contentIndex = body.indexOf('brief content');
+    const feedbackIndex = body.indexOf('Help us grow');
     const footerIndex = body.indexOf('Posted by [pr-trailer]');
 
     expect(markerIndex).toBe(0);
     expect(contentIndex).toBeGreaterThan(markerIndex);
-    expect(footerIndex).toBeGreaterThan(contentIndex);
+    expect(feedbackIndex).toBeGreaterThan(contentIndex);
+    expect(footerIndex).toBeGreaterThan(feedbackIndex);
+  });
+
+  it('links the feedback line to the community feedback form, on its own line above the signature', async () => {
+    const { octokit, createComment } = createFakeOctokit([]);
+
+    await upsertPrComment(octokit, params, 'brief content');
+
+    const body = createComment.mock.calls[0][0].body as string;
+
+    expect(body).toContain(
+      '🌱 *Help us grow and [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8)*\n\n🤖 *Posted by',
+    );
   });
 
   it('links the footer to the canonical repo, not the pre-rename name', async () => {

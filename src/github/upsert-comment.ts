@@ -4,10 +4,11 @@ export type Octokit = ReturnType<typeof github.getOctokit>;
 
 export const PR_TRAILER_MARKER = '<!-- pr-trailer:v1 -->';
 
+const FEEDBACK_LINE = '🌱 *Help us grow and [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8)*';
 const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*';
 
 function composeBody(body: string): string {
-  return `${PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FOOTER}`;
+  return `${PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FEEDBACK_LINE}\n\n${FOOTER}`;
 }
 
 export async function upsertPrComment(
