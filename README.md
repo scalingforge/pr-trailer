@@ -28,16 +28,12 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
   pull-requests: write
 
 jobs:
   run-pr-trailer:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Run pr-trailer
         uses: yasel-scf/pr-trailer@v1
         with:
@@ -71,9 +67,25 @@ Once you have a key:
 
 ## Required permissions
 
-The workflow needs `contents: read` to read the diff and
-`pull-requests: write` to post the review comment. `pr-trailer` never
-writes to your source code.
+`pr-trailer` asks for exactly one permission: `pull-requests: write`. That
+single scope covers everything it does with your `github-token` — nothing
+more is requested, and no other `permissions` entry (`contents`, `issues`,
+`checks`, etc.) is needed.
+
+**What it reads**, via the GitHub API: the PR's title, body, commit
+messages, and changed files (diff). None of this comes from checking out
+your repository — `pr-trailer` never clones it, so it has no filesystem
+access to your source code.
+
+**What it writes**: exactly one PR comment — the review brief — created
+once and updated in place on every subsequent push. It never creates a
+second comment.
+
+**What it never does**: modify, create, or delete any file, branch, or
+commit; approve, merge, or close a pull request; or read/write anything
+outside the pull request it's running on. It cannot do any of this because
+`pull-requests: write` doesn't grant that access — not because of an
+internal check.
 
 ## Example output
 
