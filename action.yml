@@ -19,7 +19,7 @@ inputs:
     required: false
     default: 'package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock'
   verbosity:
-    description: "Minimum severity written to the action logs, on the standard GitHub Actions scale (error < warn < notice < info < debug), same as @actions/core's log functions and super-linter's LOG_LEVEL. 'debug' adds extra detail such as file/commit counts and exclusion lists. Default: 'info'."
+    description: "Minimum severity written to the action logs, on the standard GitHub Actions scale (error < warn < notice < info < debug), same as @actions/core's log functions and super-linter's LOG_LEVEL. 'debug' adds extra detail such as file/commit counts and exclusion lists. An unrecognized value falls back to 'info' with a warning. Default: 'info'."
     required: false
     default: 'info'
 runs:

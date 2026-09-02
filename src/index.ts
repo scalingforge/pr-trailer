@@ -4,7 +4,7 @@ import { extractPrContext } from './github/extract-context';
 import { upsertPrComment } from './github/upsert-comment';
 import { JobSubmissionError, pollJob, submitJob } from './api/jobs-client';
 import { composeCommentBody } from './render/render-brief';
-import { createLogger, parseVerbosity, type Verbosity } from './logger';
+import { createLogger, parseVerbosity } from './logger';
 
 function parseExcludeFiles(raw: string): string[] {
   return raw
@@ -19,13 +19,7 @@ async function run(): Promise<void> {
   const githubToken = core.getInput('github-token', { required: true });
   const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
 
-  let verbosity: Verbosity;
-  try {
-    verbosity = parseVerbosity(core.getInput('verbosity'));
-  } catch (err) {
-    core.setFailed(err instanceof Error ? err.message : String(err));
-    return;
-  }
+  const verbosity = parseVerbosity(core.getInput('verbosity'), core);
   const log = createLogger(verbosity, core);
 
   const octokit = github.getOctokit(githubToken);

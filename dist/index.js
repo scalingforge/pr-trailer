@@ -31917,14 +31917,7 @@ async function run() {
     const apiUrl = core.getInput('api-url', { required: true });
     const githubToken = core.getInput('github-token', { required: true });
     const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
-    let verbosity;
-    try {
-        verbosity = (0, logger_1.parseVerbosity)(core.getInput('verbosity'));
-    }
-    catch (err) {
-        core.setFailed(err instanceof Error ? err.message : String(err));
-        return;
-    }
+    const verbosity = (0, logger_1.parseVerbosity)(core.getInput('verbosity'), core);
     const log = (0, logger_1.createLogger)(verbosity, core);
     const octokit = github.getOctokit(githubToken);
     const { context } = github;
@@ -31992,7 +31985,7 @@ const LEVELS = {
     info: 3,
     debug: 4,
 };
-function parseVerbosity(raw) {
+function parseVerbosity(raw, core) {
     const value = raw.trim().toLowerCase();
     if (value === '') {
         return 'info';
@@ -32000,7 +31993,8 @@ function parseVerbosity(raw) {
     if (value in LEVELS) {
         return value;
     }
-    throw new Error(`Invalid verbosity "${raw}". Expected one of: error, warn, notice, info, debug.`);
+    core.warning(`Invalid verbosity "${raw}"; defaulting to "info". Expected one of: error, warn, notice, info, debug.`);
+    return 'info';
 }
 function createLogger(verbosity, core) {
     const level = LEVELS[verbosity];

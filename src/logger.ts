@@ -19,7 +19,7 @@ export interface CoreLike {
   warning(message: string): void;
 }
 
-export function parseVerbosity(raw: string): Verbosity {
+export function parseVerbosity(raw: string, core: Pick<CoreLike, 'warning'>): Verbosity {
   const value = raw.trim().toLowerCase();
   if (value === '') {
     return 'info';
@@ -27,7 +27,8 @@ export function parseVerbosity(raw: string): Verbosity {
   if (value in LEVELS) {
     return value as Verbosity;
   }
-  throw new Error(`Invalid verbosity "${raw}". Expected one of: error, warn, notice, info, debug.`);
+  core.warning(`Invalid verbosity "${raw}"; defaulting to "info". Expected one of: error, warn, notice, info, debug.`);
+  return 'info';
 }
 
 export function createLogger(verbosity: Verbosity, core: CoreLike): Logger {

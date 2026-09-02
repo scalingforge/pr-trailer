@@ -1,29 +1,38 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createLogger, parseVerbosity } from './logger';
 
+function fakeCore() {
+  return { info: vi.fn(), warning: vi.fn() };
+}
+
 describe('parseVerbosity', () => {
   it('defaults an empty string to "info"', () => {
-    expect(parseVerbosity('')).toBe('info');
+    const core = fakeCore();
+
+    expect(parseVerbosity('', core)).toBe('info');
+    expect(core.warning).not.toHaveBeenCalled();
   });
 
   it('accepts all standard levels case-insensitively with surrounding whitespace', () => {
-    expect(parseVerbosity('error')).toBe('error');
-    expect(parseVerbosity(' Warn ')).toBe('warn');
-    expect(parseVerbosity('NOTICE')).toBe('notice');
-    expect(parseVerbosity('Info')).toBe('info');
-    expect(parseVerbosity('DEBUG')).toBe('debug');
+    const core = fakeCore();
+
+    expect(parseVerbosity('error', core)).toBe('error');
+    expect(parseVerbosity(' Warn ', core)).toBe('warn');
+    expect(parseVerbosity('NOTICE', core)).toBe('notice');
+    expect(parseVerbosity('Info', core)).toBe('info');
+    expect(parseVerbosity('DEBUG', core)).toBe('debug');
+    expect(core.warning).not.toHaveBeenCalled();
   });
 
-  it('throws for an unrecognized value', () => {
-    expect(() => parseVerbosity('verbose')).toThrow(/Invalid verbosity "verbose"/);
+  it('falls back to "info" and warns on an unrecognized value', () => {
+    const core = fakeCore();
+
+    expect(parseVerbosity('verbose', core)).toBe('info');
+    expect(core.warning).toHaveBeenCalledWith(expect.stringContaining('Invalid verbosity "verbose"'));
   });
 });
 
 describe('createLogger', () => {
-  function fakeCore() {
-    return { info: vi.fn(), warning: vi.fn() };
-  }
-
   it('error: suppresses info, debug, and warnings', () => {
     const core = fakeCore();
     const log = createLogger('error', core);
