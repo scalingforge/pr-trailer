@@ -34,9 +34,6 @@ jobs:
   run-pr-trailer:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
       - name: Run pr-trailer
         uses: yasel-scf/pr-trailer@v1
         with:
