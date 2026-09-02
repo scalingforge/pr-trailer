@@ -18,6 +18,10 @@ inputs:
     description: 'Comma-separated list of filenames to exclude from diff extraction, overriding the default lockfile exclusions.'
     required: false
     default: 'package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock'
+  verbosity:
+    description: "Minimum severity written to the action logs, on the standard GitHub Actions scale (error < warn < notice < info < debug), same as @actions/core's log functions and super-linter's LOG_LEVEL. 'debug' adds extra detail such as file/commit counts and exclusion lists. Default: 'info'."
+    required: false
+    default: 'info'
 runs:
   using: 'node24'
   main: 'dist/index.js'

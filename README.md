@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Run pr-trailer
         uses: yasel-scf/pr-trailer@v1
@@ -68,6 +68,7 @@ Once you have a key:
 | `api-url` | Yes | — | Base URL of the pr-trailer service. |
 | `github-token` | No | `${{ github.token }}` | Used to read PR data and post/update the review comment. |
 | `exclude-files` | No | `package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock` | Comma-separated filenames excluded from diff extraction. An empty string excludes nothing. |
+| `verbosity` | No | `info` | Minimum severity written to the action logs: `error`, `warn`, `notice`, `info`, or `debug` — the standard scale used by `@actions/core` and other GitHub Actions such as super-linter's `LOG_LEVEL`. `debug` adds extra detail such as file/commit counts and exclusion lists. |
 
 ## Required permissions
 

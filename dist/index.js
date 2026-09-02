@@ -31905,6 +31905,7 @@ const extract_context_1 = __nccwpck_require__(4320);
 const upsert_comment_1 = __nccwpck_require__(4708);
 const jobs_client_1 = __nccwpck_require__(7728);
 const render_brief_1 = __nccwpck_require__(4911);
+const logger_1 = __nccwpck_require__(6999);
 function parseExcludeFiles(raw) {
     return raw
         .split(',')
@@ -31916,13 +31917,23 @@ async function run() {
     const apiUrl = core.getInput('api-url', { required: true });
     const githubToken = core.getInput('github-token', { required: true });
     const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
+    let verbosity;
+    try {
+        verbosity = (0, logger_1.parseVerbosity)(core.getInput('verbosity'));
+    }
+    catch (err) {
+        core.setFailed(err instanceof Error ? err.message : String(err));
+        return;
+    }
+    const log = (0, logger_1.createLogger)(verbosity, core);
     const octokit = github.getOctokit(githubToken);
     const { context } = github;
     const pullRequest = context.payload.pull_request;
     if (!pullRequest) {
-        core.info('No pull_request in event payload; skipping comment.');
+        log.info('No pull_request in event payload; skipping comment.');
         return;
     }
+    log.debug(`Excluding files matching: ${excludeFiles.length > 0 ? excludeFiles.join(', ') : '(none)'}`);
     const prContext = await (0, extract_context_1.extractPrContext)(octokit, {
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -31930,6 +31941,7 @@ async function run() {
         title: pullRequest.title,
         body: pullRequest.body ?? null,
     }, excludeFiles);
+    log.debug(`Extracted ${prContext.files.length} file(s) and ${prContext.commitMessages.length} commit message(s) from PR #${pullRequest.number}.`);
     let jobId;
     try {
         jobId = await (0, jobs_client_1.submitJob)(apiUrl, apiKey, { title: prContext.title, body: prContext.body, commitMessages: prContext.commitMessages }, prContext.files);
@@ -31941,26 +31953,75 @@ async function run() {
         }
         throw err;
     }
-    core.info(`Submitted job ${jobId}`);
+    log.info(`Submitted job ${jobId}`);
     const result = await (0, jobs_client_1.pollJob)(apiUrl, apiKey, jobId, {
-        onStatus: (status) => core.info(`Job ${jobId} status: ${status}`),
+        onStatus: (status) => log.info(`Job ${jobId} status: ${status}`),
     });
     if (result.outcome === 'error') {
-        core.warning('pr-trailer-api reported a job error; skipping comment.');
+        log.warning('pr-trailer-api reported a job error; skipping comment.');
         return;
     }
     if (result.outcome === 'timeout') {
-        core.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
+        log.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
         return;
     }
     const commentBody = (0, render_brief_1.composeCommentBody)(result.job.brief, result.job.audio);
     await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, commentBody);
-    core.info(`Posted comment on PR #${pullRequest.number}`);
+    log.info(`Posted comment on PR #${pullRequest.number}`);
 }
 run().catch((err) => {
     const message = err instanceof Error ? err.message : String(err);
     core.setFailed(message);
 });
+
+
+/***/ }),
+
+/***/ 6999:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseVerbosity = parseVerbosity;
+exports.createLogger = createLogger;
+const LEVELS = {
+    error: 0,
+    warn: 1,
+    notice: 2,
+    info: 3,
+    debug: 4,
+};
+function parseVerbosity(raw) {
+    const value = raw.trim().toLowerCase();
+    if (value === '') {
+        return 'info';
+    }
+    if (value in LEVELS) {
+        return value;
+    }
+    throw new Error(`Invalid verbosity "${raw}". Expected one of: error, warn, notice, info, debug.`);
+}
+function createLogger(verbosity, core) {
+    const level = LEVELS[verbosity];
+    return {
+        debug(message) {
+            if (level >= LEVELS.debug) {
+                core.info(`[debug] ${message}`);
+            }
+        },
+        info(message) {
+            if (level >= LEVELS.info) {
+                core.info(message);
+            }
+        },
+        warning(message) {
+            if (level >= LEVELS.warn) {
+                core.warning(message);
+            }
+        },
+    };
+}
 
 
 /***/ }),
