@@ -128,7 +128,6 @@ read.
 `pr-trailer` is proprietary software, published publicly for transparency
 but **not open source**. You may run it in your own workflows to use the
 hosted service; redistribution and modification are not permitted. See
-[LICENSE](./LICENSE) for the full terms and
-[CONTRIBUTING.md](./CONTRIBUTING.md) for how to report bugs.
+[LICENSE](./LICENSE) for the full terms.
 
 © 2026 ScalingForge. All rights reserved.
