@@ -94,7 +94,7 @@ describe('upsertPrComment', () => {
     const body = createComment.mock.calls[0][0].body as string;
 
     expect(body).toContain(
-      '🌱 *Help us grow — [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8) and shape what pr-trailer becomes next.*\n\n🤖 *Posted by',
+      '🌱 *Help us grow and [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8)*\n\n🤖 *Posted by',
     );
   });
 
