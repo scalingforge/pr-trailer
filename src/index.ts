@@ -3,7 +3,7 @@ import * as github from '@actions/github';
 import { extractPrContext } from './github/extract-context';
 import { upsertPrComment } from './github/upsert-comment';
 import { JobSubmissionError, pollJob, submitJob } from './api/jobs-client';
-import { composeCommentBody } from './render/render-brief';
+import { composeCommentBody, composeQuotaExceededCommentBody } from './render/render-brief';
 import { createLogger, parseVerbosity } from './logger';
 
 function parseExcludeFiles(raw: string): string[] {
@@ -13,7 +13,7 @@ function parseExcludeFiles(raw: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   const apiKey = core.getInput('api-key', { required: true });
   const apiUrl = core.getInput('api-url', { required: true });
   const githubToken = core.getInput('github-token', { required: true });
@@ -61,6 +61,19 @@ async function run(): Promise<void> {
     );
   } catch (err) {
     if (err instanceof JobSubmissionError) {
+      if (err.kind === 'quota_exceeded') {
+        log.warning('pr-trailer-api rejected the run: monthly quota exceeded.');
+        const commentBody = err.usage
+          ? composeQuotaExceededCommentBody(err.usage)
+          : 'PR trailer plan limit reached for this month.';
+        await upsertPrComment(
+          octokit,
+          { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number },
+          commentBody,
+        );
+        log.info(`Posted quota-exceeded comment on PR #${pullRequest.number}`);
+        return;
+      }
       core.setFailed(err.message);
       return;
     }
@@ -82,7 +95,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  const commentBody = composeCommentBody(result.job.brief, result.job.audio);
+  const commentBody = composeCommentBody(result.job.brief, result.job.audio, result.job.usage);
 
   await upsertPrComment(
     octokit,
@@ -93,7 +106,9 @@ async function run(): Promise<void> {
   log.info(`Posted comment on PR #${pullRequest.number}`);
 }
 
-run().catch((err: unknown) => {
-  const message = err instanceof Error ? err.message : String(err);
-  core.setFailed(message);
-});
+if (require.main === module) {
+  run().catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    core.setFailed(message);
+  });
+}
