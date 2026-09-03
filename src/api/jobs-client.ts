@@ -21,11 +21,26 @@ export interface AudioInfo {
   durationSeconds: number;
 }
 
+export interface UsageSnapshot {
+  used: number;
+  cap: number;
+  remaining: number;
+  yearMonth: string;
+  resetsAt: string;
+}
+
+export interface QuotaExceededUsage {
+  used: number;
+  cap: number;
+  resetsAt: string;
+}
+
 export interface JobResponse {
   status: 'queued' | 'processing' | 'done' | 'error';
   brief: Brief | null;
   audio: AudioInfo | null;
   error: string | null;
+  usage: UsageSnapshot | null;
 }
 
 export interface PrInput {
@@ -46,8 +61,9 @@ export interface PrFile {
 
 export class JobSubmissionError extends Error {
   constructor(
-    public readonly kind: 'unauthorized' | 'rejected',
+    public readonly kind: 'unauthorized' | 'rejected' | 'quota_exceeded',
     message: string,
+    public readonly usage?: QuotaExceededUsage,
   ) {
     super(message);
     this.name = 'JobSubmissionError';
@@ -72,6 +88,18 @@ export async function submitJob(
 
   if (response.status === 401) {
     throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
+  }
+  if (response.status === 429) {
+    const body = (await response.json().catch(() => null)) as { used?: number; cap?: number; resetsAt?: string } | null;
+    const usage: QuotaExceededUsage | undefined =
+      body && typeof body.used === 'number' && typeof body.cap === 'number' && typeof body.resetsAt === 'string'
+        ? { used: body.used, cap: body.cap, resetsAt: body.resetsAt }
+        : undefined;
+    throw new JobSubmissionError(
+      'quota_exceeded',
+      'pr-trailer-api rejected the request: monthly run quota exceeded.',
+      usage,
+    );
   }
   if (!response.ok) {
     const bodyText = await response.text().catch(() => '');

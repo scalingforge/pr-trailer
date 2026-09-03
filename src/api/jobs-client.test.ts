@@ -58,6 +58,37 @@ describe('submitJob', () => {
     const err = new JobSubmissionError('rejected', 'message');
     expect(err).toBeInstanceOf(Error);
   });
+
+  it('throws a JobSubmissionError with kind "quota_exceeded" and parsed usage on 429', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(429, { error: 'quota_exceeded', used: 50, cap: 50, resetsAt: '2026-10-01T00:00:00.000Z' }),
+      );
+
+    const err = await submitJob('https://api.example', 'key-1', pr, files, fetchFn).catch((e) => e);
+
+    expect(err).toMatchObject({
+      kind: 'quota_exceeded',
+      usage: { used: 50, cap: 50, resetsAt: '2026-10-01T00:00:00.000Z' },
+    });
+  });
+
+  it('quota_exceeded error carries undefined usage if the 429 body is unparsable', async () => {
+    const fetchFn = vi.fn().mockResolvedValue({
+      status: 429,
+      ok: false,
+      json: async () => {
+        throw new Error('not json');
+      },
+      text: async () => 'not json',
+    } as unknown as Response);
+
+    const err = await submitJob('https://api.example', 'key-1', pr, files, fetchFn).catch((e) => e);
+
+    expect(err).toMatchObject({ kind: 'quota_exceeded' });
+    expect(err.usage).toBeUndefined();
+  });
 });
 
 const doneJob: JobResponse = {
@@ -65,6 +96,7 @@ const doneJob: JobResponse = {
   brief: { summary: 's', intent: 'i', riskLevel: 'low', files: [], readOrder: [], openQuestions: [] },
   audio: { url: 'https://cdn/a.mp3', expiresAt: '2026-08-01T00:00:00.000Z', durationSeconds: 42 },
   error: null,
+  usage: null,
 };
 
 describe('pollJob', () => {

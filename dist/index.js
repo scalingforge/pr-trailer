@@ -31707,9 +31707,11 @@ exports.submitJob = submitJob;
 exports.pollJob = pollJob;
 class JobSubmissionError extends Error {
     kind;
-    constructor(kind, message) {
+    usage;
+    constructor(kind, message, usage) {
         super(message);
         this.kind = kind;
+        this.usage = usage;
         this.name = 'JobSubmissionError';
     }
 }
@@ -31725,6 +31727,13 @@ async function submitJob(apiUrl, apiKey, pr, files, fetchFn = fetch) {
     });
     if (response.status === 401) {
         throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
+    }
+    if (response.status === 429) {
+        const body = (await response.json().catch(() => null));
+        const usage = body && typeof body.used === 'number' && typeof body.cap === 'number' && typeof body.resetsAt === 'string'
+            ? { used: body.used, cap: body.cap, resetsAt: body.resetsAt }
+            : undefined;
+        throw new JobSubmissionError('quota_exceeded', 'pr-trailer-api rejected the request: monthly run quota exceeded.', usage);
     }
     if (!response.ok) {
         const bodyText = await response.text().catch(() => '');
@@ -31900,6 +31909,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const extract_context_1 = __nccwpck_require__(4320);
@@ -31942,6 +31952,15 @@ async function run() {
     }
     catch (err) {
         if (err instanceof jobs_client_1.JobSubmissionError) {
+            if (err.kind === 'quota_exceeded') {
+                log.warning('pr-trailer-api rejected the run: monthly quota exceeded.');
+                const commentBody = err.usage
+                    ? (0, render_brief_1.composeQuotaExceededCommentBody)(err.usage)
+                    : 'PR trailer plan limit reached for this month.';
+                await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, commentBody);
+                log.info(`Posted quota-exceeded comment on PR #${pullRequest.number}`);
+                return;
+            }
             core.setFailed(err.message);
             return;
         }
@@ -31959,14 +31978,16 @@ async function run() {
         log.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
         return;
     }
-    const commentBody = (0, render_brief_1.composeCommentBody)(result.job.brief, result.job.audio);
+    const commentBody = (0, render_brief_1.composeCommentBody)(result.job.brief, result.job.audio, result.job.usage);
     await (0, upsert_comment_1.upsertPrComment)(octokit, { owner: context.repo.owner, repo: context.repo.repo, pullNumber: pullRequest.number }, commentBody);
     log.info(`Posted comment on PR #${pullRequest.number}`);
 }
-run().catch((err) => {
-    const message = err instanceof Error ? err.message : String(err);
-    core.setFailed(message);
-});
+if (require.main === require.cache[eval('__filename')]) {
+    run().catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        core.setFailed(message);
+    });
+}
 
 
 /***/ }),
@@ -32028,17 +32049,35 @@ function createLogger(verbosity, core) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.composeCommentBody = composeCommentBody;
+exports.composeQuotaExceededCommentBody = composeQuotaExceededCommentBody;
 const RISK_EMOJI = {
     low: '🟢',
     medium: '🟡',
     high: '🔴',
 };
-function composeCommentBody(brief, audio) {
+function composeCommentBody(brief, audio, usage) {
     const riskLine = `**Risk Score:** ${RISK_EMOJI[brief.riskLevel]} ${capitalize(brief.riskLevel)}`;
     const audioLine = `**PR trailer Audio:** ${renderAudio(audio)}`;
     const intentBriefLine = `**Intent Brief:** ${brief.intent}`;
     const intentDescriptionSection = `<details>\n<summary>Intent Description</summary>\n\n${brief.summary}\n</details>`;
-    return [riskLine, audioLine, intentBriefLine, intentDescriptionSection].join('\n\n');
+    const sections = [riskLine, audioLine, intentBriefLine, intentDescriptionSection];
+    const usageLine = renderUsageLine(usage);
+    if (usageLine) {
+        sections.push(usageLine);
+    }
+    return sections.join('\n\n');
+}
+function composeQuotaExceededCommentBody(usage) {
+    return `**PR trailer plan limit reached** (${usage.used}/${usage.cap} runs this month) — resets ${formatResetsAt(usage.resetsAt)}.`;
+}
+function renderUsageLine(usage) {
+    if (!usage) {
+        return null;
+    }
+    return `**Usage:** ${usage.used}/${usage.cap} runs this month · resets ${formatResetsAt(usage.resetsAt)}`;
+}
+function formatResetsAt(resetsAt) {
+    return new Date(resetsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 function renderAudio(audio) {
     if (!audio) {
