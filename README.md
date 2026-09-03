@@ -102,15 +102,23 @@ internal check.
 > Adds a login feature with token-based session handling and a new /login route.
 > </details>
 >
+> **Usage:** 12/50 runs this month · resets Oct 1
+>
 > ---
 > 🤖 *Posted by [pr-trailer](https://github.com/scalingforge/pr-trailer)*
 
-The comment is always exactly these four sections, in this order, each
-separated by a blank line. When text-to-speech is unavailable, the audio
-section reads `🔇 Not generated for this run` — it is never omitted and no
-error is surfaced. GitHub strips `target="_blank"` from PR comments, so the
-link opens in the same tab by default — the "(open a new tab)" text is a
-hint for readers who want to middle-click/cmd-click it instead.
+The comment is always these four sections, in this order, each separated
+by a blank line, plus a fifth **Usage** line whenever the API reports
+usage for the requesting key. When text-to-speech is unavailable, the
+audio section reads `🔇 Not generated for this run` — it is never omitted
+and no error is surfaced. GitHub strips `target="_blank"` from PR
+comments, so the link opens in the same tab by default — the "(open a
+new tab)" text is a hint for readers who want to middle-click/cmd-click
+it instead.
+
+If a key's monthly run cap is reached, the Action posts a single
+friendly comment instead — *"PR trailer plan limit reached (50/50 runs
+this month) — resets Oct 1."* — and does not fail the workflow step.
 
 Intent Description is collapsed by default: the first three sections
 (Risk Score, Audio, Intent Brief) are what a reviewer sees at a glance —
