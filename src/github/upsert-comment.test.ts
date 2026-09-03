@@ -105,7 +105,7 @@ describe('upsertPrComment', () => {
 
     const body = createComment.mock.calls[0][0].body as string;
 
-    expect(body).toContain('https://github.com/yasel-scf/pr-trailer)');
+    expect(body).toContain('https://github.com/scalingforge/pr-trailer)');
     expect(body).not.toContain('pr-trailer-ghaction');
   });
 });

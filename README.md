@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run pr-trailer
-        uses: yasel-scf/pr-trailer@v1
+        uses: scalingforge/pr-trailer@v1
         with:
           api-key: ${{ secrets.PR_TRAILER_API_KEY }}
           api-url: ${{ vars.PR_TRAILER_API_URL }}
@@ -47,7 +47,7 @@ No other changes to your codebase are needed.
 ## Getting an API key
 
 `pr-trailer` is a hosted service. Self-serve sign-up is coming soon — until
-then, email yasel@scalingforge.com to request access.
+then, email support@scalingforge.com to request access.
 
 Once you have a key:
 
@@ -103,7 +103,7 @@ internal check.
 > </details>
 >
 > ---
-> 🤖 *Posted by [pr-trailer](https://github.com/yasel-scf/pr-trailer)*
+> 🤖 *Posted by [pr-trailer](https://github.com/scalingforge/pr-trailer)*
 
 The comment is always exactly these four sections, in this order, each
 separated by a blank line. When text-to-speech is unavailable, the audio
@@ -119,8 +119,8 @@ read.
 
 ## Support
 
-- **Bugs and feature requests:** [open an issue](https://github.com/yasel-scf/pr-trailer/issues)
-- **Account, billing, or API keys:** yasel@scalingforge.com
+- **Bugs and feature requests:** [open an issue](https://github.com/scalingforge/pr-trailer/issues)
+- **Account, billing, or API keys:** support@scalingforge.com
 - **Security vulnerabilities:** see [SECURITY.md](./SECURITY.md) — please don't file a public issue
 
 ## Licensing
