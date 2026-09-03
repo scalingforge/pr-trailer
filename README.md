@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run pr-trailer
-        uses: scalingforge/pr-trailer@v1
+        uses: Scalingforge/pr-trailer@v1
         with:
           api-key: ${{ secrets.PR_TRAILER_API_KEY }}
           api-url: ${{ vars.PR_TRAILER_API_URL }}
@@ -103,7 +103,7 @@ internal check.
 > </details>
 >
 > ---
-> 🤖 *Posted by [pr-trailer](https://github.com/scalingforge/pr-trailer)*
+> 🤖 *Posted by [pr-trailer](https://github.com/Scalingforge/pr-trailer)*
 
 The comment is always exactly these four sections, in this order, each
 separated by a blank line. When text-to-speech is unavailable, the audio
@@ -119,7 +119,7 @@ read.
 
 ## Support
 
-- **Bugs and feature requests:** [open an issue](https://github.com/scalingforge/pr-trailer/issues)
+- **Bugs and feature requests:** [open an issue](https://github.com/Scalingforge/pr-trailer/issues)
 - **Account, billing, or API keys:** support@scalingforge.com
 - **Security vulnerabilities:** see [SECURITY.md](./SECURITY.md) — please don't file a public issue
 
