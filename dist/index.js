@@ -31707,9 +31707,11 @@ exports.submitJob = submitJob;
 exports.pollJob = pollJob;
 class JobSubmissionError extends Error {
     kind;
-    constructor(kind, message) {
+    usage;
+    constructor(kind, message, usage) {
         super(message);
         this.kind = kind;
+        this.usage = usage;
         this.name = 'JobSubmissionError';
     }
 }
@@ -31725,6 +31727,13 @@ async function submitJob(apiUrl, apiKey, pr, files, fetchFn = fetch) {
     });
     if (response.status === 401) {
         throw new JobSubmissionError('unauthorized', 'pr-trailer-api rejected the request: invalid api-key.');
+    }
+    if (response.status === 429) {
+        const body = (await response.json().catch(() => null));
+        const usage = body && typeof body.used === 'number' && typeof body.cap === 'number' && typeof body.resetsAt === 'string'
+            ? { used: body.used, cap: body.cap, resetsAt: body.resetsAt }
+            : undefined;
+        throw new JobSubmissionError('quota_exceeded', 'pr-trailer-api rejected the request: monthly run quota exceeded.', usage);
     }
     if (!response.ok) {
         const bodyText = await response.text().catch(() => '');
