@@ -31827,7 +31827,7 @@ exports.PR_TRAILER_MARKER = void 0;
 exports.upsertPrComment = upsertPrComment;
 exports.PR_TRAILER_MARKER = '<!-- pr-trailer:v1 -->';
 const FEEDBACK_LINE = '🌱 *Help us grow and [share your feedback](https://forms.gle/DgRwVFE8wGBhQFhC8)*';
-const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/Scalingforge/pr-trailer)*';
+const FOOTER = '🤖 *Posted by [pr-trailer](https://github.com/scalingforge/pr-trailer)*';
 function composeBody(body) {
     return `${exports.PR_TRAILER_MARKER}\n\n${body}\n\n---\n${FEEDBACK_LINE}\n\n${FOOTER}`;
 }

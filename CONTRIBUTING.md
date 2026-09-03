@@ -6,7 +6,7 @@ and we do not accept external pull requests.
 
 ## Found a bug? Want a feature?
 
-Please [open an issue](https://github.com/Scalingforge/pr-trailer/issues). Bug
+Please [open an issue](https://github.com/scalingforge/pr-trailer/issues). Bug
 reports and feature requests are genuinely welcome and are the most useful
 way to contribute.
 

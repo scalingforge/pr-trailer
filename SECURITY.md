@@ -6,7 +6,7 @@ If you find a security vulnerability in the `pr-trailer` Action, please do
 **not** open a public GitHub issue.
 
 Report it privately through GitHub's
-[private vulnerability reporting](https://github.com/Scalingforge/pr-trailer/security/advisories/new)
+[private vulnerability reporting](https://github.com/scalingforge/pr-trailer/security/advisories/new)
 for this repository, or email support@scalingforge.com.
 
 Please include enough detail to reproduce the issue — the affected version,
