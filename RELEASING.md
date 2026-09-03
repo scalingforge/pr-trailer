@@ -3,7 +3,7 @@
 `pr-trailer` is versioned with semantic version tags (`vX.Y.Z`) plus a
 floating major-version tag (`vX`) that always points at the latest release
 in that major line. This is the standard pattern for GitHub Actions:
-customers pin `uses: yasel-scf/pr-trailer@v1` and receive non-breaking
+customers pin `uses: scalingforge/pr-trailer@v1` and receive non-breaking
 updates automatically.
 
 ## Cutting a release
