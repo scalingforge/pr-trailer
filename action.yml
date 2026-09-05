@@ -5,10 +5,10 @@ branding:
   color: 'purple'
 inputs:
   api-key:
-    description: 'pr-trailer-api key used to authenticate requests to the analysis service.'
+    description: 'pr-trailer-api key used to authenticate requests'
     required: true
   api-url:
-    description: 'Base URL of the deployed pr-trailer-api service.'
+    description: 'Base URL of your pr-trailer-api'
     required: true
   github-token:
     description: 'Token used to read PR data and post the comment.'
@@ -19,7 +19,7 @@ inputs:
     required: false
     default: 'package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock'
   verbosity:
-    description: "Minimum severity written to the action logs, on the standard GitHub Actions scale (error < warn < notice < info < debug), same as @actions/core's log functions and super-linter's LOG_LEVEL. 'debug' adds extra detail such as file/commit counts and exclusion lists. An unrecognized value falls back to 'info' with a warning. Default: 'info'."
+    description: "Verbosity logs (error < warn < notice < info < debug)"
     required: false
     default: 'info'
 runs:

@@ -1,20 +1,26 @@
 # pr-trailer
 
-**Know what a pull request changed before you start reading it.**
+**Understand pull requests intent and changes before reading.**
 
-`pr-trailer` analyzes each pull request and posts a single, risk-prioritized
-review brief as a comment — which files are risky, why, and what order to
-read them in. The comment updates in place on every push, so it never
-clutters the thread.
+`pr-trailer` analyzes pull requests and posts a single risk-prioritized
+review brief as a comment. Includes an audio file to be listened to fully understand what the intent was and major risks. 
 
-Built and operated by [ScalingForge](https://scalingforge.com).
+ <em>(...) Its like a coworker quick call if there is little time or the author was an AI (...)<em>
 
-## What you get
+We advice to read the PR diff **while** listening to the audio to get advantge of both audio and visual input to fully understand the changes.
 
-- **A risk ranking per file** — so you spend review time where it matters.
-- **A suggested reading order** — the dependency-aware path through the diff.
-- **An audio trailer** — a short spoken summary of the PR, when available.
-- **One comment, always current** — updated in place, never duplicated.
+## How pr-trailer saves your time?
+
+It only produces the following:
+
+* **The PR merge risk** 
+  * Only spend **human review time** where it matters.
+* **A ~1min PR audio trailer**
+  - To listen **while** you review the diff.
+  - **Confidently understand** the 80% less relevant changes by listening the summary.
+  - Spot the **major risk areas** to focus a **human review time**.
+* **A ~1min readable PR text intent summary**
+  - Major changes, risk areas, etc. Not the same content as the audio trailer. A general summary to be read.
 
 ## Quickstart
 
@@ -46,7 +52,7 @@ No other changes to your codebase are needed.
 
 ## Getting an API key
 
-`pr-trailer` is a hosted service. Self-serve sign-up is coming soon — until
+`pr-trailer` is a hosted service. Self-serve sign-up is coming soon. Until
 then, email support@scalingforge.com to request access.
 
 Once you have a key:
@@ -62,7 +68,7 @@ Once you have a key:
 |---|---|---|---|
 | `api-key` | Yes | — | Authenticates requests to the pr-trailer service. |
 | `api-url` | Yes | — | Base URL of the pr-trailer service. |
-| `github-token` | No | `${{ github.token }}` | Used to read PR data and post/update the review comment. |
+| `github-token` | No | `${{ github.token }}` | Used to read on the fly the PR data and post/update the review comment. We dont store your code or use it anyhow but to produce the comment and audio file|
 | `exclude-files` | No | `package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock` | Comma-separated filenames excluded from diff extraction. An empty string excludes nothing. |
 | `verbosity` | No | `info` | Logs verbosity: `error`, `warn`, `notice`, `info`, `debug` |
 
@@ -84,9 +90,7 @@ second comment.
 
 **What it never does**: modify, create, or delete any file, branch, or
 commit; approve, merge, or close a pull request; or read/write anything
-outside the pull request it's running on. It cannot do any of this because
-`pull-requests: write` doesn't grant that access — not because of an
-internal check.
+outside the pull request it's running on.
 
 ## Example output
 
