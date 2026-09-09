@@ -87,11 +87,17 @@ export async function run(): Promise<void> {
   });
 
   if (result.outcome === 'error') {
-    core.setFailed(`pr-trailer-api reported a job error for job ${jobId}; see the API/worker logs for details.`);
+    core.setFailed(
+      `PR trailer hit an error generating this trailer. If this keeps happening, contact ` +
+        `support@scalingforge.com with job id ${jobId}.`,
+    );
     return;
   }
   if (result.outcome === 'timeout') {
-    core.setFailed(`pr-trailer-api job ${jobId} did not finish before the polling ceiling.`);
+    core.setFailed(
+      `PR trailer didn't finish generating this trailer in time. If this keeps happening, contact ` +
+        `support@scalingforge.com with job id ${jobId}.`,
+    );
     return;
   }
 

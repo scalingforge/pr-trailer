@@ -111,23 +111,32 @@ describe('run() poll outcome handling', () => {
   // where every brief-generation call failed deterministically) and the workflow step
   // still went green — pollJob correctly returned outcome: 'error', but run() only
   // logged a warning instead of failing the Action.
-  it('fails the Action when the API reports a job error', async () => {
+  it('fails the Action when the API reports a job error, with a customer-facing message', async () => {
     pollJobMock.mockResolvedValue({ outcome: 'error' });
     const { run } = await import('./index');
 
     await run();
 
     expect(setFailedMock).toHaveBeenCalledTimes(1);
+    const message = setFailedMock.mock.calls[0][0] as string;
+    // Public product: other teams run this in their own repos and can't see our
+    // internal API/worker logs, so point them at support instead of "check the logs".
+    expect(message).toContain('support@scalingforge.com');
+    expect(message).toContain('job-1');
+    expect(message).not.toMatch(/logs/i);
     expect(upsertPrCommentMock).not.toHaveBeenCalled();
   });
 
-  it('fails the Action when polling hits the timeout ceiling', async () => {
+  it('fails the Action when polling hits the timeout ceiling, with a customer-facing message', async () => {
     pollJobMock.mockResolvedValue({ outcome: 'timeout' });
     const { run } = await import('./index');
 
     await run();
 
     expect(setFailedMock).toHaveBeenCalledTimes(1);
+    const message = setFailedMock.mock.calls[0][0] as string;
+    expect(message).toContain('support@scalingforge.com');
+    expect(message).toContain('job-1');
     expect(upsertPrCommentMock).not.toHaveBeenCalled();
   });
 });
