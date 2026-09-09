@@ -31971,11 +31971,11 @@ async function run() {
         onStatus: (status) => log.info(`Job ${jobId} status: ${status}`),
     });
     if (result.outcome === 'error') {
-        log.warning('pr-trailer-api reported a job error; skipping comment.');
+        core.setFailed(`pr-trailer-api reported a job error for job ${jobId}; see the API/worker logs for details.`);
         return;
     }
     if (result.outcome === 'timeout') {
-        log.warning('pr-trailer-api job did not finish before the polling ceiling; skipping comment.');
+        core.setFailed(`pr-trailer-api job ${jobId} did not finish before the polling ceiling.`);
         return;
     }
     const commentBody = (0, render_brief_1.composeCommentBody)(result.job.brief, result.job.audio, result.job.usage);
