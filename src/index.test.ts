@@ -97,3 +97,37 @@ describe('run() quota_exceeded handling', () => {
     expect(upsertPrCommentMock).not.toHaveBeenCalled();
   });
 });
+
+describe('run() poll outcome handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    payload = { pull_request: { number: 7, title: 'Add feature', body: 'body' } };
+    setInputs();
+    extractPrContextMock.mockResolvedValue({ title: 'Add feature', body: 'body', commitMessages: [], files: [] });
+    submitJobMock.mockResolvedValue('job-1');
+  });
+
+  // Regression: pr-trailer-api reported a job failure (e.g. the 2026-09-09 incident
+  // where every brief-generation call failed deterministically) and the workflow step
+  // still went green — pollJob correctly returned outcome: 'error', but run() only
+  // logged a warning instead of failing the Action.
+  it('fails the Action when the API reports a job error', async () => {
+    pollJobMock.mockResolvedValue({ outcome: 'error' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(setFailedMock).toHaveBeenCalledTimes(1);
+    expect(upsertPrCommentMock).not.toHaveBeenCalled();
+  });
+
+  it('fails the Action when polling hits the timeout ceiling', async () => {
+    pollJobMock.mockResolvedValue({ outcome: 'timeout' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(setFailedMock).toHaveBeenCalledTimes(1);
+    expect(upsertPrCommentMock).not.toHaveBeenCalled();
+  });
+});
