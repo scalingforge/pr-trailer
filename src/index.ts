@@ -4,13 +4,25 @@ import { extractPrContext } from './github/extract-context';
 import { upsertPrComment } from './github/upsert-comment';
 import { JobSubmissionError, pollJob, submitJob } from './api/jobs-client';
 import { composeCommentBody, composeQuotaExceededCommentBody } from './render/render-brief';
-import { createLogger, parseVerbosity } from './logger';
+import { createLogger, parseVerbosity, type CoreLike } from './logger';
 
 function parseExcludeFiles(raw: string): string[] {
   return raw
     .split(',')
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
+}
+
+function parseRunIf(raw: string, core: Pick<CoreLike, 'warning'>): boolean {
+  const value = raw.trim().toLowerCase();
+  if (value === '' || value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  core.warning(`Invalid run-if "${raw}"; defaulting to "true". Expected "true" or "false".`);
+  return true;
 }
 
 export async function run(): Promise<void> {
@@ -21,6 +33,12 @@ export async function run(): Promise<void> {
 
   const verbosity = parseVerbosity(core.getInput('verbosity'), core);
   const log = createLogger(verbosity, core);
+
+  const runIf = parseRunIf(core.getInput('run-if'), core);
+  if (!runIf) {
+    log.info('run-if is false; skipping pr-trailer execution.');
+    return;
+  }
 
   const octokit = github.getOctokit(githubToken);
   const { context } = github;

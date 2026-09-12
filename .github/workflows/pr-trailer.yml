@@ -15,9 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Compute diff size
+        id: diffstat
+        run: echo "total_lines=$(( ${{ github.event.pull_request.additions }} + ${{ github.event.pull_request.deletions }} ))" >> "$GITHUB_OUTPUT"
+
       - name: Run pr-trailer
         uses: ./
         with:
           api-key: ${{ secrets.PR_TRAILER_API_KEY }}
           api-url: ${{ vars.PR_TRAILER_API_URL }}
           github-token: ${{ github.token }}
+          run-if: ${{ github.event.pull_request.changed_files > 3 || steps.diffstat.outputs.total_lines > 50 }}
