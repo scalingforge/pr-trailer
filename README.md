@@ -71,6 +71,7 @@ Once you have a key:
 | `github-token` | No | `${{ github.token }}` | Used to read on the fly the PR data and post/update the review comment. We dont store your code or use it anyhow but to produce the comment and audio file|
 | `exclude-files` | No | `package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock` | Comma-separated filenames excluded from diff extraction. An empty string excludes nothing. |
 | `verbosity` | No | `info` | Logs verbosity: `error`, `warn`, `notice`, `info`, `debug` |
+| `run-if` | No | `true` | Set to `false` (e.g. via a workflow expression) to skip this run entirely. |
 
 ## Required permissions
 

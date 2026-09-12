@@ -31923,6 +31923,17 @@ function parseExcludeFiles(raw) {
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 }
+function parseRunIf(raw, core) {
+    const value = raw.trim().toLowerCase();
+    if (value === '' || value === 'true') {
+        return true;
+    }
+    if (value === 'false') {
+        return false;
+    }
+    core.warning(`Invalid run-if "${raw}"; defaulting to "true". Expected "true" or "false".`);
+    return true;
+}
 async function run() {
     const apiKey = core.getInput('api-key', { required: true });
     const apiUrl = core.getInput('api-url', { required: true });
@@ -31930,6 +31941,11 @@ async function run() {
     const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
     const verbosity = (0, logger_1.parseVerbosity)(core.getInput('verbosity'), core);
     const log = (0, logger_1.createLogger)(verbosity, core);
+    const runIf = parseRunIf(core.getInput('run-if'), core);
+    if (!runIf) {
+        log.info('run-if is false; skipping pr-trailer execution.');
+        return;
+    }
     const octokit = github.getOctokit(githubToken);
     const { context } = github;
     const pullRequest = context.payload.pull_request;

@@ -56,6 +56,7 @@ function setInputs(overrides: Record<string, string> = {}) {
     'github-token': 't',
     'exclude-files': '',
     verbosity: 'info',
+    'run-if': 'true',
   };
   const inputs = { ...defaults, ...overrides };
   getInputMock.mockImplementation((name: string) => inputs[name] ?? '');
@@ -129,5 +130,38 @@ describe('run() poll outcome handling', () => {
 
     expect(setFailedMock).toHaveBeenCalledTimes(1);
     expect(upsertPrCommentMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('run() run-if gating', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    payload = { pull_request: { number: 7, title: 'Add feature', body: 'body' } };
+    extractPrContextMock.mockResolvedValue({ title: 'Add feature', body: 'body', commitMessages: [], files: [] });
+    submitJobMock.mockResolvedValue('job-1');
+    pollJobMock.mockResolvedValue({ outcome: 'error' });
+  });
+
+  it('skips execution without failing when run-if is false', async () => {
+    setInputs({ 'run-if': 'false' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(extractPrContextMock).not.toHaveBeenCalled();
+    expect(submitJobMock).not.toHaveBeenCalled();
+    expect(setFailedMock).not.toHaveBeenCalled();
+  });
+
+  it('defaults to true and warns on an invalid run-if value', async () => {
+    setInputs({ 'run-if': 'maybe' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(warningMock).toHaveBeenCalledWith(
+      'Invalid run-if "maybe"; defaulting to "true". Expected "true" or "false".',
+    );
+    expect(submitJobMock).toHaveBeenCalled();
   });
 });
