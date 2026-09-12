@@ -26,11 +26,6 @@ function parseRunIf(raw: string, core: Pick<CoreLike, 'warning'>): boolean {
 }
 
 export async function run(): Promise<void> {
-  const apiKey = core.getInput('api-key', { required: true });
-  const apiUrl = core.getInput('api-url', { required: true });
-  const githubToken = core.getInput('github-token', { required: true });
-  const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
-
   const verbosity = parseVerbosity(core.getInput('verbosity'), core);
   const log = createLogger(verbosity, core);
 
@@ -39,6 +34,11 @@ export async function run(): Promise<void> {
     log.info('run-if is false; skipping pr-trailer execution.');
     return;
   }
+
+  const apiKey = core.getInput('api-key', { required: true });
+  const apiUrl = core.getInput('api-url', { required: true });
+  const githubToken = core.getInput('github-token', { required: true });
+  const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
 
   const octokit = github.getOctokit(githubToken);
   const { context } = github;

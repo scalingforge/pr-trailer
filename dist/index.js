@@ -31935,10 +31935,6 @@ function parseRunIf(raw, core) {
     return true;
 }
 async function run() {
-    const apiKey = core.getInput('api-key', { required: true });
-    const apiUrl = core.getInput('api-url', { required: true });
-    const githubToken = core.getInput('github-token', { required: true });
-    const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
     const verbosity = (0, logger_1.parseVerbosity)(core.getInput('verbosity'), core);
     const log = (0, logger_1.createLogger)(verbosity, core);
     const runIf = parseRunIf(core.getInput('run-if'), core);
@@ -31946,6 +31942,10 @@ async function run() {
         log.info('run-if is false; skipping pr-trailer execution.');
         return;
     }
+    const apiKey = core.getInput('api-key', { required: true });
+    const apiUrl = core.getInput('api-url', { required: true });
+    const githubToken = core.getInput('github-token', { required: true });
+    const excludeFiles = parseExcludeFiles(core.getInput('exclude-files'));
     const octokit = github.getOctokit(githubToken);
     const { context } = github;
     const pullRequest = context.payload.pull_request;

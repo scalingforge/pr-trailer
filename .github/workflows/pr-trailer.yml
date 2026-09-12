@@ -26,3 +26,4 @@ jobs:
           api-url: ${{ vars.PR_TRAILER_API_URL }}
           github-token: ${{ github.token }}
           run-if: ${{ github.event.pull_request.changed_files > 3 || steps.diffstat.outputs.total_lines > 50 }}
+          exclude-files: package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,poetry.lock,index.js
