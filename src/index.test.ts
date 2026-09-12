@@ -59,7 +59,13 @@ function setInputs(overrides: Record<string, string> = {}) {
     'run-if': 'true',
   };
   const inputs = { ...defaults, ...overrides };
-  getInputMock.mockImplementation((name: string) => inputs[name] ?? '');
+  getInputMock.mockImplementation((name: string, options?: { required?: boolean }) => {
+    const value = inputs[name] ?? '';
+    if (options?.required && value === '') {
+      throw new Error(`Input required and not supplied: ${name}`);
+    }
+    return value;
+  });
 }
 
 describe('run() quota_exceeded handling', () => {
@@ -163,5 +169,18 @@ describe('run() run-if gating', () => {
       'Invalid run-if "maybe"; defaulting to "true". Expected "true" or "false".',
     );
     expect(submitJobMock).toHaveBeenCalled();
+  });
+
+  // Regression: run() used to read api-key/api-url/github-token (all `required: true`)
+  // before checking run-if, so a repo that set run-if: false without also wiring up
+  // API credentials got a hard core.setFailed instead of a clean skip.
+  it('skips cleanly when run-if is false even if required credentials are unset', async () => {
+    setInputs({ 'run-if': 'false', 'api-key': '', 'api-url': '', 'github-token': '' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(submitJobMock).not.toHaveBeenCalled();
+    expect(setFailedMock).not.toHaveBeenCalled();
   });
 });
