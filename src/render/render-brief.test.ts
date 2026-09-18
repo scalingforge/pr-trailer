@@ -10,8 +10,6 @@ const baseBrief: Brief = {
     { path: 'src/auth/session.ts', risk: 'high', reason: 'Touches token expiry logic' },
     { path: 'README.md', risk: 'low', reason: 'Docs only' },
   ],
-  readOrder: ['src/auth/session.ts', 'README.md'],
-  openQuestions: ['Is the token TTL configurable?'],
 };
 
 const emptyBrief: Brief = {
@@ -19,8 +17,6 @@ const emptyBrief: Brief = {
   intent: 'Fix a typo',
   riskLevel: 'low',
   files: [],
-  readOrder: [],
-  openQuestions: [],
 };
 
 describe('composeCommentBody', () => {
@@ -84,7 +80,7 @@ describe('composeCommentBody', () => {
     expect(body.trimEnd().endsWith('</details>')).toBe(true);
   });
 
-  it('renders the same fixed labels regardless of files/readOrder/openQuestions content', () => {
+  it('renders the same fixed labels regardless of files content', () => {
     const fullBody = composeCommentBody(baseBrief, null, null);
     const emptyBody = composeCommentBody(emptyBrief, null, null);
 
