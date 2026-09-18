@@ -93,7 +93,7 @@ describe('submitJob', () => {
 
 const doneJob: JobResponse = {
   status: 'done',
-  brief: { summary: 's', intent: 'i', riskLevel: 'low', files: [], readOrder: [], openQuestions: [] },
+  brief: { summary: 's', intent: 'i', riskLevel: 'low', files: [] },
   audio: { url: 'https://cdn/a.mp3', expiresAt: '2026-08-01T00:00:00.000Z', durationSeconds: 42 },
   error: null,
   usage: null,

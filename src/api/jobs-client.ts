@@ -11,8 +11,6 @@ export interface Brief {
   intent: string;
   riskLevel: RiskLevel;
   files: BriefFile[];
-  readOrder: string[];
-  openQuestions: string[];
 }
 
 export interface AudioInfo {
