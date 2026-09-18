@@ -31769,7 +31769,7 @@ async function pollJob(apiUrl, apiKey, jobId, deps = {}) {
             return { outcome: 'done', job: job };
         }
         if (job.status === 'error') {
-            return { outcome: 'error' };
+            return { outcome: 'error', error: job.error };
         }
         if (now() - startedAt >= POLL_CEILING_MS) {
             return { outcome: 'timeout' };
@@ -31987,7 +31987,8 @@ async function run() {
         onStatus: (status) => log.info(`Job ${jobId} status: ${status}`),
     });
     if (result.outcome === 'error') {
-        core.setFailed(`pr-trailer-api reported a job error for job ${jobId}; see the API/worker logs for details.`);
+        const detail = result.error ? result.error.slice(0, 500) : 'see the API/worker logs for details.';
+        core.setFailed(`pr-trailer-api reported a job error for job ${jobId}: ${detail}`);
         return;
     }
     if (result.outcome === 'timeout') {

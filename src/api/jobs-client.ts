@@ -122,7 +122,7 @@ export interface PollDeps {
 
 export type PollResult =
   | { outcome: 'done'; job: JobResponse & { brief: Brief } }
-  | { outcome: 'error' }
+  | { outcome: 'error'; error: string | null }
   | { outcome: 'timeout' };
 
 const POLL_CEILING_MS = 6 * 60 * 1000;
@@ -163,7 +163,7 @@ export async function pollJob(
       return { outcome: 'done', job: job as JobResponse & { brief: Brief } };
     }
     if (job.status === 'error') {
-      return { outcome: 'error' };
+      return { outcome: 'error', error: job.error };
     }
     if (now() - startedAt >= POLL_CEILING_MS) {
       return { outcome: 'timeout' };
