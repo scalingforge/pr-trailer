@@ -113,13 +113,37 @@ describe('run() poll outcome handling', () => {
   // still went green — pollJob correctly returned outcome: 'error', but run() only
   // logged a warning instead of failing the Action.
   it('fails the Action when the API reports a job error', async () => {
-    pollJobMock.mockResolvedValue({ outcome: 'error' });
+    pollJobMock.mockResolvedValue({ outcome: 'error', error: 'boom' });
     const { run } = await import('./index');
 
     await run();
 
     expect(setFailedMock).toHaveBeenCalledTimes(1);
     expect(upsertPrCommentMock).not.toHaveBeenCalled();
+  });
+
+  // Regression: a 2026-09-18 incident (every job failing on an Anthropic account usage
+  // cap) took a full CloudWatch log dig to diagnose because the Action only ever
+  // reported "see the API/worker logs for details" — even though the API already
+  // returns the real error in the job's `error` field. Surface it instead of hiding it.
+  it('includes the job\'s error detail in the failure message', async () => {
+    pollJobMock.mockResolvedValue({ outcome: 'error', error: 'You have reached your specified API usage limits.' });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(setFailedMock).toHaveBeenCalledWith(
+      expect.stringContaining('You have reached your specified API usage limits.'),
+    );
+  });
+
+  it('falls back to a generic message when the job has no error detail', async () => {
+    pollJobMock.mockResolvedValue({ outcome: 'error', error: null });
+    const { run } = await import('./index');
+
+    await run();
+
+    expect(setFailedMock).toHaveBeenCalledWith(expect.stringContaining('see the API/worker logs for details.'));
   });
 
   it('fails the Action when polling hits the timeout ceiling', async () => {
@@ -139,7 +163,7 @@ describe('run() run-if gating', () => {
     payload = { pull_request: { number: 7, title: 'Add feature', body: 'body' } };
     extractPrContextMock.mockResolvedValue({ title: 'Add feature', body: 'body', commitMessages: [], files: [] });
     submitJobMock.mockResolvedValue('job-1');
-    pollJobMock.mockResolvedValue({ outcome: 'error' });
+    pollJobMock.mockResolvedValue({ outcome: 'error', error: 'boom' });
   });
 
   it('skips execution without failing when run-if is false', async () => {

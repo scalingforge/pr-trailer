@@ -105,7 +105,8 @@ export async function run(): Promise<void> {
   });
 
   if (result.outcome === 'error') {
-    core.setFailed(`pr-trailer-api reported a job error for job ${jobId}; see the API/worker logs for details.`);
+    const detail = result.error ? result.error.slice(0, 500) : 'see the API/worker logs for details.';
+    core.setFailed(`pr-trailer-api reported a job error for job ${jobId}: ${detail}`);
     return;
   }
   if (result.outcome === 'timeout') {

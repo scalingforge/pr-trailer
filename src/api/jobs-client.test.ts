@@ -154,12 +154,12 @@ describe('pollJob', () => {
     }
   });
 
-  it('returns error outcome when the job reports status "error"', async () => {
+  it('returns error outcome with the job\'s error detail when the job reports status "error"', async () => {
     const fetchFn = vi.fn().mockResolvedValue(jsonResponse(200, { status: 'error', brief: null, audio: null, error: 'boom' }));
 
     const result = await pollJob('https://api.example', 'key-1', 'job-1', { fetchFn, sleepFn: vi.fn(), now: () => 0 });
 
-    expect(result).toEqual({ outcome: 'error' });
+    expect(result).toEqual({ outcome: 'error', error: 'boom' });
   });
 
   it('returns timeout when the 6-minute ceiling is reached without a terminal status', async () => {
